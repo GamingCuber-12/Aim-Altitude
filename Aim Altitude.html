@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIM Altitude | Custom Web Design & Development</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Staatliches&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- Design Tokens & Color Palette --- */
+        :root {
+            --bg-pure: #FAFAFC;
+            --bg-soft: #F0F2F8;
+            --primary-pink: #FF3366;
+            --dark-pink: #D11A4D;
+            --text-dark: #1A1C23;
+            --text-muted: #5C6275;
+            --card-shadow: 0 20px 40px rgba(255, 51, 102, 0.06);
+            --blur-border: rgba(255, 51, 102, 0.15);
+            --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            --tabby-green: #39FFB8;
+            --graph-blue: #00E5FF;
+            --graph-green: #10B981;
+            
+            /* Glassmorphism */
+            --glass-bg: rgba(255, 255, 255, 0.6);
+            --glass-blur: blur(20px);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --glass-shadow: 0 8px 32px 0 rgba(255, 51, 102, 0.04);
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        html { 
+            scroll-behavior: smooth; 
+        }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-pure);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- Enhanced Geometric Background --- */
+        .bg-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2;
+            pointer-events: none;
+            background-image: 
+                radial-gradient(rgba(255, 30, 39, 0.15) 1px, transparent 2px),
+                linear-gradient(135deg, #FAFAFC 0%, #F0F3FA 100%);
+            background-size: 50px 50px, 100% 100%;
+        }
+
+        /* Dynamic Glowing Orbs */
+        .ambient-glow {
+            position: fixed; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(100px); opacity: 0.4;
+        }
+        .glow-1 { top: -10%; left: -5%; width: 50vw; height: 50vw; background: rgba(255, 51, 102, 0.15); animation: float 20s ease-in-out infinite alternate; }
+        .glow-2 { bottom: -10%; right: -5%; width: 40vw; height: 40vw; background: rgba(0, 229, 255, 0.1); animation: float 15s ease-in-out infinite alternate-reverse; }
+
+        /* Animated Geometric Background Rings */
+        .geo-circle {
+            position: fixed; border-radius: 50%; pointer-events: none; z-index: -1; transform-origin: center;
+        }
+        .geo-circle-1 {
+            width: 800px; height: 800px; top: -15%; right: -10%;
+            border: 2px dashed rgba(255, 51, 102, 0.1);
+            animation: rotateCircle 60s linear infinite;
+        }
+        .geo-circle-2 {
+            width: 500px; height: 500px; bottom: 5%; left: -10%;
+            border: 1px solid rgba(0, 229, 255, 0.15);
+            animation: rotateCircleReverse 45s linear infinite;
+        }
+        .geo-circle-3 {
+            width: 1200px; height: 1200px; top: 10%; left: 30%;
+            border: 1px dashed rgba(26, 28, 35, 0.03);
+            animation: rotateCircle 90s linear infinite;
+        }
+        .geo-circle-4 {
+            width: 300px; height: 300px; top: 40%; right: 15%;
+            border: 2px solid rgba(255, 51, 102, 0.05);
+            background: radial-gradient(circle, rgba(255, 51, 102, 0.02) 0%, transparent 70%);
+        }
+
+        /* --- Announcement Banner --- */
+        .promo-ribbon {
+            background: linear-gradient(90deg, #1A1C23 0%, #2A2E3D 100%);
+            color: #FFF; text-align: center; padding: 12px 20px; font-size: 13px; font-weight: 700;
+            letter-spacing: 1px; display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; position: relative; z-index: 1001;
+        }
+        .promo-ribbon span { color: var(--primary-pink); }
+        .tabby-badge {
+            background: #000; color: var(--tabby-green); padding: 4px 10px; border-radius: 6px;
+            font-size: 11px; font-weight: 900; text-transform: uppercase; border: 1px solid rgba(57, 255, 184, 0.3);
+        }
+
+        /* --- Floating Sticky Button --- */
+        .sticky-action-shelf { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 12px; z-index: 999; }
+        .sticky-pill {
+            background: rgba(26, 28, 35, 0.9); backdrop-filter: var(--glass-blur); color: #FFF;
+            padding: 16px 28px; border-radius: 50px; text-decoration: none; font-size: 13px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.2);
+            transition: var(--transition-smooth); cursor: pointer; animation: pulseGlow 3s infinite ease-in-out;
+        }
+        .sticky-pill:hover {
+            transform: translateY(-5px) scale(1.02); background: var(--primary-pink);
+            border-color: rgba(255,255,255,0.4); box-shadow: 0 20px 40px rgba(255, 51, 102, 0.3);
+        }
+
+        /* --- Custom Interactive Cursor Indicator --- */
+        #custom-cursor {
+            width: 18px; height: 18px; border: 2px solid var(--primary-pink); border-radius: 50%;
+            position: fixed; transform: translate(-50%, -50%); pointer-events: none; z-index: 9999;
+            transition: width 0.2s, height 0.2s, background-color 0.2s; mix-blend-mode: multiply;
+        }
+
+        /* --- Navigation Bar --- */
+        header {
+            position: fixed; top: 0px; left: 0; width: 100%;
+            background-color: rgba(250, 250, 252, 0.60); backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px); z-index: 1000;
+            border-bottom: 1px solid var(--blur-border); transition: top 0.4s ease-in-out;
+        }
+
+        .nav-inner { max-width: 1650px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 18px 40px; }
+        .logo-package { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .logo-icon {
+            width: 40px; height: 40px; background: var(--primary-pink); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(255, 51, 102, 0.25);
+            transition: transform 0.3s ease;
+        }
+        .logo-package:hover .logo-icon { transform: rotate(15deg) scale(1.1); }
+        
+        .nav-menu { display: flex; list-style: none; gap: 20px; align-items: center; }
+        .nav-menu a {
+            color: var(--text-dark); text-decoration: none; font-weight: 700; font-size: 11px;
+            text-transform: uppercase; letter-spacing: 1px; position: relative; transition: var(--transition-smooth);
+        }
+        .nav-menu a:hover, .nav-menu a.active-bookmark { color: var(--primary-pink); }
+
+        /* --- New Layout Structures (Full Width) --- */
+        .container {
+            width: 100%; max-width: 1650px; margin: 0 auto; padding: 0 40px;
+        }
+
+        section {
+            padding: 140px 0; width: 100%; display: flex; flex-direction: column; justify-content: center;
+            opacity: 0; transform: translateY(40px); transition: var(--transition-smooth);
+        }
+        section.reveal-active { opacity: 1; transform: translateY(0); }
+
+        .section-header { text-align: center; margin-bottom: 70px; }
+        .section-header h2 { font-family: 'Staatliches', sans-serif; font-size: 5rem; letter-spacing: 1px; line-height: 1; text-transform: uppercase; color: var(--text-dark); }
+        .section-header p { color: var(--primary-pink); font-weight: 700; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 10px; }
+
+        /* --- Dark Section Modifications (True Full Bleed) --- */
+        section.dark-section-variant {
+            background-color: #1A1C23; position: relative; overflow: hidden;
+        }
+        section.dark-section-variant .section-header h2 { color: #FAFAFC; }
+        section.dark-section-variant .service-card { background: #232630; border-color: rgba(255, 51, 102, 0.1); }
+        section.dark-section-variant .service-card h3 { color: #FAFAFC; }
+        section.dark-section-variant .service-card p { color: #CDD4E4; }
+        section.dark-section-variant .mini-metric-card { background: #232630; border-color: rgba(255, 51, 102, 0.1); }
+        section.dark-section-variant .mini-metric-card p { color: #CDD4E4; }
+        section.dark-section-variant .standing-bar-value { color: #FAFAFC; }
+        section.dark-section-variant .standing-bar-label { color: #FAFAFC; }
+        section.dark-section-variant .standing-chart-container { border-bottom-color: #FAFAFC; }
+        section.dark-section-variant .lab-btn { background: #232630; border-color: rgba(255, 51, 102, 0.1); color: #FAFAFC; }
+        section.dark-section-variant .lab-btn.active-control, 
+        section.dark-section-variant .lab-btn:hover { background: #2A2E3D; border-color: var(--primary-pink); }
+        section.dark-section-variant .glass-feature-card { background: rgba(35, 38, 48, 0.7); border-color: rgba(255, 255, 255, 0.1); }
+        section.dark-section-variant .glass-feature-card h3 { color: #FAFAFC; }
+        section.dark-section-variant .glass-feature-card p { color: #CDD4E4; }
+
+        /* --- Buttons System --- */
+        .btn-system {
+            display: inline-block; padding: 16px 38px; border-radius: 50px; font-weight: 700;
+            font-size: 13px; text-transform: uppercase; letter-spacing: 1px; text-decoration: none;
+            cursor: pointer; transition: var(--transition-smooth); border: none;
+        }
+        .btn-pink-filled { background-color: var(--primary-pink); color: #FFF; box-shadow: 0 10px 30px rgba(255, 51, 102, 0.2); }
+        .btn-pink-filled:hover { background-color: var(--dark-pink); transform: translateY(-4px); box-shadow: 0 15px 35px rgba(255, 51, 102, 0.35); }
+        .btn-pink-outline { background-color: transparent; color: var(--primary-pink); border: 2px solid var(--primary-pink); }
+        .btn-pink-outline:hover { background-color: rgba(255, 51, 102, 0.05); transform: translateY(-4px); }
+
+        /* --- Enhanced Hero Section --- */
+        #home {
+            background-image: linear-gradient(rgba(250, 250, 252, 0.8), rgba(250, 250, 252, 0.85)), url('section1.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .hero-layout { display: flex; align-items: center; justify-content: space-between; gap: 80px; position: relative; }
+        .hero-intro { flex: 1; max-width: 750px; }
+        .hero-intro h1 { font-family: 'Staatliches', sans-serif; font-size: 7.5rem; line-height: 0.9; margin-bottom: 25px; color: var(--text-dark); }
+        .hero-intro h1 span { color: var(--primary-pink); }
+        .hero-intro p { font-size: 1.3rem; color: var(--text-muted); margin-bottom: 40px; max-width: 650px; }
+        
+        .hero-display { flex: 1; display: flex; justify-content: flex-end; position: relative; }
+        
+        /* Upgraded Massive Hero Image Shape with 3D Interaction Wrapper */
+        .hero-display-showcase { 
+            width: 650px; height: 650px; position: relative; display: flex; align-items: center; justify-content: center;
+            perspective: 1200px; /* Activates 3D space */
+        }
+        /* Soft pulsing shadow behind the shape */
+        .hero-display-showcase::before {
+            content: ''; position: absolute; top: 10%; left: 10%; right: 10%; bottom: 10%;
+            background: linear-gradient(45deg, var(--primary-pink), var(--graph-blue));
+            filter: blur(60px); opacity: 0.3; animation: pulseGlow 8s infinite alternate ease-in-out;
+            border-radius: 20px; z-index: 0;
+        }
+
+        /* 3D Object Turning Inwards on Hover */
+        .floating-canvas {
+            width: 100%; height: 100%; background: #FFF; position: relative; z-index: 1;
+            border-radius: 24px;
+            overflow: hidden; 
+            box-shadow: inset 0 0 0 2px rgba(255,255,255,0.5), 0 40px 80px rgba(0,0,0,0.15); 
+            border: 2px solid var(--blur-border);
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: rotateX(5deg) rotateY(-10deg);
+        }
+        .hero-display-showcase:hover .floating-canvas { 
+            transform: rotateX(-10deg) rotateY(15deg) translateZ(20px); /* Turns inward/changes perspective on mouse hover */
+        }
+        .floating-canvas img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s ease; }
+        .floating-canvas:hover img { transform: scale(1.05); }
+
+        /* --- Endless Bidirectional Marquee Banner --- */
+        .marquee-container {
+            width: 100%;
+            overflow: hidden;
+            background: var(--primary-pink);
+            padding: 18px 0;
+            display: flex;
+            white-space: nowrap;
+            align-items: center;
+            border-bottom: 2px solid #1A1C23;
+        }
+        .marquee-track {
+            display: flex;
+            animation: marqueeAnimation 25s linear infinite;
+        }
+        .marquee-content {
+            font-family: 'Staatliches', sans-serif;
+            font-size: 2.5rem;
+            color: #FAFAFC;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            padding-right: 60px;
+            text-transform: uppercase;
+        }
+        .marquee-content span {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .marquee-content i {
+            color: #1A1C23;
+            font-size: 1.5rem;
+        }
+
+        @keyframes marqueeAnimation {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* --- Services / Capabilities Grid --- */
+        .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .service-card {
+            background: #FFF; border: 1px solid var(--blur-border); padding: 50px 40px;
+            border-radius: 24px; box-shadow: var(--card-shadow); transition: var(--transition-smooth);
+            cursor: pointer; position: relative; overflow: hidden;
+        }
+        .service-card:hover { transform: translateY(-8px); border-color: var(--primary-pink); background: var(--bg-soft); }
+        .service-card i { font-size: 2.8rem; color: var(--primary-pink); margin-bottom: 25px; transition: transform 0.3s ease; }
+        .service-card:hover i { transform: scale(1.1) rotate(5deg); }
+        .service-card h3 { font-family: 'Staatliches', sans-serif; font-size: 2.2rem; margin-bottom: 15px; letter-spacing: 0.5px; color: var(--text-dark); }
+        .service-card p { color: var(--text-muted); font-size: 1rem; }
+        
+        .card-click-hint {
+            position: absolute; bottom: 15px; right: 20px; font-size: 11px; font-weight: 700; color: var(--primary-pink);
+            opacity: 0; transform: translateX(10px); transition: var(--transition-smooth); text-transform: uppercase; letter-spacing: 1px;
+        }
+        .service-card:hover .card-click-hint { opacity: 1; transform: translateX(0); }
+
+        /* --- Utilities Stack --- */
+        .utility-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; }
+        .utility-card {
+            background: #FFF; border: 1px solid var(--blur-border); padding: 45px; border-radius: 32px; box-shadow: var(--card-shadow);
+            display: flex; gap: 25px; align-items: flex-start; transition: var(--transition-smooth); flex-direction: column;
+        }
+        .utility-card:hover { transform: scale(1.02); border-color: var(--primary-pink); }
+        .utility-icon-box {
+            background: rgba(255, 51, 102, 0.05); width: 65px; height: 65px; border-radius: 20px; display: flex; align-items: center;
+            justify-content: center; flex-shrink: 0; border: 1px solid var(--blur-border); color: var(--primary-pink); font-size: 1.8rem;
+        }
+        .utility-content h3 { font-family: 'Staatliches', sans-serif; font-size: 2rem; margin-bottom: 10px; letter-spacing: 0.5px; color: var(--text-dark); }
+        .utility-content p { color: var(--text-muted); font-size: 0.95rem; }
+        
+        .utility-media-wrap {
+            width: 100%; height: 240px; border-radius: 16px; margin-top: 15px; overflow: hidden; border: 1px solid var(--blur-border); position: relative;
+        }
+        .utility-media-wrap img { width: 100%; height: 100%; object-fit: cover; transition: var(--transition-smooth); }
+        .utility-card:hover .utility-media-wrap img { transform: scale(1.05); }
+
+        /* --- Analytics & Dashboard Elements --- */
+        .analytics-dashboard-shelf { display: grid; grid-template-columns: 1fr; gap: 50px; margin-top: 50px; align-items: stretch; }
+        .live-chart-canvas-glass {
+            background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border); padding: 40px; border-radius: 32px; box-shadow: var(--glass-shadow);
+            display: flex; flex-direction: column; justify-content: space-between; gap: 30px; margin: 0 auto; width: 100%; max-width: 1100px;
+        }
+        
+        .standing-chart-container { display: flex; justify-content: space-around; align-items: flex-end; height: 320px; padding-top: 20px; border-bottom: 2px solid var(--text-dark); position: relative; }
+        .standing-chart-column { display: flex; flex-direction: column; align-items: center; width: 18%; height: 100%; justify-content: flex-end; position: relative; }
+        .standing-bar-track { width: 100%; background: var(--bg-soft); border-radius: 12px 12px 0 0; height: 100%; display: flex; align-items: flex-end; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); }
+        .standing-bar-fill { width: 100%; height: 0%; border-radius: 12px 12px 0 0; transition: height 2s cubic-bezier(0.16, 1, 0.3, 1); position: relative; display: flex; justify-content: center; }
+        .standing-bar-value { position: absolute; top: -30px; font-weight: 800; font-size: 13px; color: var(--text-dark); white-space: nowrap; }
+        .standing-bar-label { margin-top: 15px; font-weight: 700; font-size: 12px; text-align: center; color: var(--text-dark); text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* --- Case Studies --- */
+        .showcase-row { display: grid; grid-template-columns: 1fr 1.2fr; gap: 60px; align-items: center; margin-bottom: 60px; }
+        .showcase-row.reverse { grid-template-columns: 1.2fr 1fr; }
+        .showcase-img { width: 100%; height: 400px; border-radius: 24px; object-fit: cover; box-shadow: var(--card-shadow); border: 1px solid var(--blur-border); transition: transform 0.4s ease; }
+        .showcase-img:hover { transform: scale(1.03); }
+        .showcase-text h3 { font-family: 'Staatliches', sans-serif; font-size: 2.5rem; margin-bottom: 15px; color: var(--text-dark); }
+        .showcase-text p { color: var(--text-muted); margin-bottom: 20px; font-size: 1.05rem; }
+
+        /* --- Interactive Design Sandbox --- */
+        .lab-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 60px; align-items: center; }
+        .lab-controls { display: flex; flex-direction: column; gap: 15px; }
+        .lab-btn {
+            padding: 20px 25px; background: #FFF; border: 1px solid var(--blur-border); border-radius: 16px; cursor: pointer; text-align: left;
+            transition: var(--transition-smooth); display: flex; align-items: center; gap: 20px; color: var(--text-dark);
+        }
+        .lab-btn.active-control, .lab-btn:hover { border-color: var(--primary-pink); box-shadow: var(--card-shadow); background: var(--bg-soft); }
+        .lab-btn h4 { font-family: 'Staatliches', sans-serif; font-size: 1.5rem; letter-spacing: 0.5px; }
+        
+        .sandbox-stage-glass {
+            background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border); border-radius: 32px; padding: 40px; min-height: 400px; box-shadow: var(--glass-shadow);
+            display: flex; flex-direction: column; gap: 20px; transition: var(--transition-smooth);
+        }
+        .sandbox-card { background: rgba(255, 255, 255, 0.7); border-radius: 16px; padding: 25px; border: 1px solid rgba(255,255,255,0.5); }
+        .sandbox-stage-glass.wireframe-mode .sandbox-card { border: 2px dashed var(--primary-pink); background: transparent; }
+        .sandbox-stage-glass.bounds-mode { gap: 40px; padding: 60px; }
+        .sandbox-stage-glass.dark-mode { background: #1A1C23; color: #FFF; }
+        .sandbox-stage-glass.dark-mode .sandbox-card { background: #2A2E3D; border-color: transparent; }
+
+        /* --- Technical Specification Details --- */
+        .spec-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #FFF; border-radius: 16px; overflow: hidden; border: 1px solid var(--blur-border); }
+        .spec-table th, .spec-table td { padding: 18px 24px; text-align: left; }
+        .spec-table th { background: #1A1C23; color: #FFF; font-family: 'Staatliches', sans-serif; font-size: 1.2rem; letter-spacing: 0.5px; }
+        .spec-table tr:nth-child(even) { background: var(--bg-soft); }
+        .spec-table td strong { color: var(--primary-pink); }
+
+        /* --- Feature Highlights Carousel Grid --- */
+        .card-carousel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .glass-feature-card {
+            background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border); border-radius: 28px; padding: 40px; box-shadow: var(--glass-shadow);
+            transition: var(--transition-smooth); display: flex; flex-direction: column; gap: 20px;
+        }
+        .glass-feature-card:hover { transform: translateY(-10px) scale(1.02); border-color: var(--primary-pink); background: rgba(255, 255, 255, 0.7); }
+        .card-display-img { width: 100%; height: 200px; border-radius: 16px; object-fit: cover; border: 1px solid var(--blur-border); }
+        .glass-feature-card h3 { font-family: 'Staatliches', sans-serif; font-size: 2rem; color: var(--text-dark); }
+        .glass-feature-card p { color: var(--text-muted); font-size: 0.95rem; }
+
+        /* --- Pricing Architecture --- */
+        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 35px; }
+        .price-card {
+            background: #FFF; padding: 55px 40px; border-radius: 35px; border: 1px solid var(--blur-border); text-align: center;
+            transition: var(--transition-smooth); position: relative; overflow: hidden;
+        }
+        .price-card.featured { background: var(--bg-soft); border: 2px solid var(--primary-pink); transform: scale(1.03); }
+        .price-card h3 { font-family: 'Staatliches', sans-serif; font-size: 2.6rem; margin-bottom: 5px; color: var(--text-dark); }
+        .price-tag { font-family: 'Staatliches', sans-serif; font-size: 4.5rem; color: var(--primary-pink); margin-bottom: 20px; }
+        .price-tag .strike-out { font-size: 2rem; color: var(--text-muted); text-decoration: line-through; margin-right: 10px; opacity: 0.6; }
+        .price-list { list-style: none; text-align: left; margin-bottom: 40px; }
+        .price-list li { margin-bottom: 14px; font-weight: 600; display: flex; align-items: center; gap: 12px; font-size: 0.95rem; color: var(--text-muted); }
+        .price-list li i { color: var(--primary-pink); }
+        .revision-indicator { background: rgba(255,51,102,0.06); color: var(--primary-pink); padding: 8px 15px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; margin-bottom: 25px; display: inline-block; }
+        .launch-badge { position: absolute; top: 25px; right: -45px; background: #1A1C23; color: #FFF; padding: 8px 45px; font-size: 10px; font-weight: 800; text-transform: uppercase; transform: rotate(45deg); letter-spacing: 1px; }
+
+        /* --- Footer --- */
+        .prestige-footer { background: #1A1C23; color: #FAFAFC; padding: 90px 0 40px 0; border-top: 3px solid var(--primary-pink); position: relative; overflow: hidden; }
+        .footer-grid { display: grid; grid-template-columns: 1.5fr repeat(3, 1fr); gap: 60px; margin-bottom: 60px; }
+        .footer-brand h3 { font-family: 'Staatliches', sans-serif; font-size: 2.5rem; margin-bottom: 15px; letter-spacing: 1px; }
+        .footer-brand h3 span { color: var(--primary-pink); }
+        .footer-brand p { color: #8A92A6; max-width: 340px; font-size: 14px; }
+        .footer-column h4 { font-family: 'Staatliches', sans-serif; font-size: 1.3rem; letter-spacing: 0.5px; margin-bottom: 25px; color: var(--primary-pink); }
+        .footer-links { list-style: none; }
+        .footer-links li { margin-bottom: 12px; }
+        .footer-links a { color: #CDD4E4; text-decoration: none; font-size: 14px; font-weight: 600; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--primary-pink); padding-left: 4px; }
+        .footer-bottom { padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; font-size: 13px; color: #8A92A6; }
+        .footer-socials { display: flex; gap: 15px; }
+        .footer-socials a { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; color: #FFF; text-decoration: none; transition: var(--transition-smooth); }
+        .footer-socials a:hover { background: var(--primary-pink); transform: translateY(-3px); }
+
+        /* --- Animations Keyframes --- */
+        @keyframes rotateCircle { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes rotateCircleReverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+        @keyframes float { 0% { transform: translateY(0px) scale(1); } 100% { transform: translateY(-30px) scale(1.05); } }
+        
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 20px 40px rgba(0,0,0,0.15); opacity: 0.3; }
+            50% { box-shadow: 0 20px 40px rgba(255, 51, 102, 0.25); transform: scale(1.03); opacity: 0.5; }
+        }
+        @keyframes paneFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Responsive Media Queries --- */
+        @media (max-width: 1250px) {
+            .hero-layout, .lab-grid, .services-grid, .pricing-grid, .utility-grid, .showcase-row, .showcase-row.reverse, .card-carousel-grid, .footer-grid {
+                grid-template-columns: 1fr; text-align: center; gap: 40px;
+            }
+            .hero-intro { max-width: 100%; margin: 0 auto; }
+            .hero-intro p { margin: 0 auto 30px auto; }
+            .hero-intro div { justify-content: center; }
+            .hero-display { justify-content: center; }
+            .hero-display-showcase { width: 450px; height: 450px; } /* Scales down smoothly for tablet */
+            .nav-menu { display: none; }
+            header { top: 0; }
+            .promo-ribbon { display: none; }
+            .standing-chart-container { height: 240px; }
+            .footer-brand p { margin: 0 auto; }
+            .footer-bottom { justify-content: center; }
+        }
+        @media (max-width: 600px) {
+            .hero-display-showcase { width: 320px; height: 320px; } /* Scales down for mobile */
+            .hero-intro h1 { font-size: 4.5rem; }
+            .section-header h2 { font-size: 3.5rem; }
+            .container { padding: 0 20px; }
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="sticky-action-shelf">
+        <div onclick="smoothScroll('#portal')" class="sticky-pill">
+            <i class="fa-solid fa-bolt" style="color: var(--graph-blue);"></i>
+            <span>Build Your Website Blueprint</span>
+        </div>
+    </div>
+
+    <div class="bg-canvas"></div>
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="geo-circle geo-circle-1"></div>
+    <div class="geo-circle geo-circle-2"></div>
+    <div class="geo-circle geo-circle-3"></div>
+    <div class="geo-circle geo-circle-4"></div>
+    <div id="custom-cursor"></div>
+
+    <header id="main-header">
+        <div class="nav-inner">
+            <a href="#home" class="logo-package">
+                <img src="logo.png" alt="AIM Altitude Logo" style="height: 35px; width: auto; object-fit: contain; display: block;">
+            </a>
+            <ul class="nav-menu">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#utilities">Features</a></li>
+                <li><a href="#metrics">Stats</a></li>
+                <li><a href="#case-studies">Work</a></li>
+                <li><a href="#architecture">Sandbox</a></li>
+                <li><a href="#technical-specs">Specs</a></li>
+                <li><a href="#online-growth">Growth</a></li>
+                <li><a href="#digital-future">Future</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+            </ul>
+            <button onclick="smoothScroll('#portal')" class="btn-system btn-pink-filled" style="padding: 12px 28px;">Get Started</button>
+        </div>
+    </header>
+
+    <section id="home">
+        <div class="container">
+            <div class="hero-layout">
+                <div class="hero-intro">
+                    <p>Premium Web Design & Engineering</p>
+                    <h1>WE BUILD WEBSITES FOR <span>SUCCESS</span>.</h1>
+                    <p>Beautiful, fast, custom websites designed to give your company instant digital credibility and scale smoothly as your brand grows.</p>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <button onclick="smoothScroll('#pricing')" class="btn-system btn-pink-filled">See Our Packages</button>
+                        <button onclick="smoothScroll('#services')" class="btn-system btn-pink-outline">Explore What We Do</button>
+                    </div>
+                </div>
+                <div class="hero-display">
+                    <div class="hero-display-showcase">
+                        <div class="floating-canvas">
+                            <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80" alt="Beautiful Interface Mockup Display Dashboard Elements Layout">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="marquee-container">
+        <div class="marquee-track">
+            <div class="marquee-content">
+                <span><i class="fa-solid fa-star"></i> Custom UI/UX Interface Design</span>
+                <span><i class="fa-solid fa-fire"></i> 100% Fully Responsive Layouts</span>
+                <span><i class="fa-solid fa-bolt"></i> Blazing Fast Load Speeds</span>
+                <span><i class="fa-solid fa-chart-line"></i> Strategic Performance Engineering</span>
+                <span><i class="fa-solid fa-shield-halved"></i> Enterprise-Grade Security Stack</span>
+            </div>
+            <div class="marquee-content">
+                <span><i class="fa-solid fa-star"></i> Custom UI/UX Interface Design</span>
+                <span><i class="fa-solid fa-fire"></i> 100% Fully Responsive Layouts</span>
+                <span><i class="fa-solid fa-bolt"></i> Blazing Fast Load Speeds</span>
+                <span><i class="fa-solid fa-chart-line"></i> Strategic Performance Engineering</span>
+                <span><i class="fa-solid fa-shield-halved"></i> Enterprise-Grade Security Stack</span>
+            </div>
+        </div>
+    </div>
+
+    <section id="services" class="dark-section-variant" style="padding-top: 100px;">
+        <div class="container">
+            <div class="section-header">
+                <p>Expert Design Capabilities</p>
+                <h2>WHAT WE DO</h2>
+            </div>
+            
+<div class="services-grid">
+    <div class="service-card" onclick="triggerMiniInteraction('uiux')">
+        <i class="fa-solid fa-compass-drafting"></i>
+        <h3>Custom UI/UX Design</h3>
+        <p>Gorgeous user interfaces designed to look highly professional, engaging, and unique to your brand.</p>
+    </div>
+    <div class="service-card" onclick="triggerMiniInteraction('native')">
+        <i class="fa-solid fa-code"></i>
+        <h3>Modern Web Development</h3>
+        <p>Clean, ultra-fast frontend code built using stable, optimized, and secure modern coding frameworks.</p>
+    </div>
+    <div class="service-card" onclick="triggerMiniInteraction('optim')">
+        <i class="fa-solid fa-chart-line"></i>
+        <h3>Performance Optimization</h3>
+        <p>Advanced image and layout staging that makes your site load instantly so users never bounce away.</p>
+    </div>
+</div>
+
+
+        </div>
+    </section>
+
+    <section id="utilities">
+        <div class="container">
+            <div class="section-header">
+                <p>Functional Modules</p>
+                <h2>CORE APPLICATION UTILITIES</h2>
+            </div>
+            <div class="utility-grid">
+                <div class="utility-card">
+                    <div class="utility-icon-box"><i class="fa-solid fa-cash-register"></i></div>
+                    <div class="utility-content">
+                        <h3>E-Commerce Core & Checkout Engine</h3>
+                        <p>Fluid checkout processes, smart currency conversion setups, secure payment gateway integrations, and instant sales tracking dashboards.</p>
+                        <div class="utility-media-wrap">
+                            <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=600&q=80" alt="Payment Terminal Credit Card Machine Checkout Sales Screen">
+                        </div>
+                    </div>
+                </div>
+                <div class="utility-card">
+                    <div class="utility-icon-box"><i class="fa-solid fa-database"></i></div>
+                    <div class="utility-content">
+                        <h3>Content Management Infrastructure</h3>
+                        <p>Simple administration backends configured so your internal teams can rewrite headlines, alter imagery, and launch brand new subpages instantly.</p>
+                        <div class="utility-media-wrap">
+                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80" alt="Database Coding Screen Server Analytics Chart Layout Graphic">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+   
+
+
+
+
+
+    <section id="case-studies">
+        <div class="container">
+            <div class="section-header">
+                <p>Selected Production Records</p>
+                <h2>CASE STUDIES IN EXCELLENCE</h2>
+            </div>
+            <div class="showcase-row">
+                <img src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=700&q=80" class="showcase-img" alt="Luxury Portfolio Web Workspace Design Theme Presentation">
+                <div class="showcase-text">
+                    <h3>Aura Prestige Logistics</h3>
+                    <p>A high-end cargo blueprint redesign that took their presentation metrics from simple tracking notes into an immersive digital luxury experience. Conversions amplified smoothly over an initial 90-day pipeline rollout.</p>
+                    <button onclick="smoothScroll('#portal')" class="btn-system btn-pink-outline">Review Scope Details</button>
+                </div>
+            </div>
+            <div class="showcase-row reverse">
+                <div class="showcase-text">
+                    <h3>Apex FinTech Frameworks</h3>
+                    <p>An ultra-secure, rapid application structural update enabling secure credential onboarding, intuitive graph interactions, and fluid account data switching tools optimized for modern screen scales.</p>
+                    <button onclick="smoothScroll('#portal')" class="btn-system btn-pink-outline">Review Scope Details</button>
+                </div>
+                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=700&q=80" class="showcase-img" alt="Financial Statistics Dashboard Dark Screens Monitor Graphics">
+            </div>
+        </div>
+    </section>
+
+    <section id="architecture" class="dark-section-variant">
+        <div class="container">
+            <div class="section-header">
+                <p>Component Prototyping Laboratory</p>
+                <h2>INTERACTIVE DESIGN SANDBOX</h2>
+            </div>
+            <div class="lab-grid">
+                <div class="lab-controls">
+                    <div class="lab-btn active-control" onclick="adjustSandboxMode('wireframe', this)">
+                        <i class="fa-solid fa-border-top-left"></i>
+                        <div>
+                            <h4>Isolate Structural Blueprints</h4>
+                            <p style="font-size:12px; opacity:0.7;">Strip cosmetic color layers to audit core wireframe layout grids.</p>
+                        </div>
+                    </div>
+                    <div class="lab-btn" onclick="adjustSandboxMode('bounds', this)">
+                        <i class="fa-solid fa-maximize"></i>
+                        <div>
+                            <h4>Expand Padding Bounds</h4>
+                            <p style="font-size:12px; opacity:0.7;">Enforce dramatic structural spacing limits for maximum content focus.</p>
+                        </div>
+                    </div>
+                    <div class="lab-btn" onclick="adjustSandboxMode('dark', this)">
+                        <i class="fa-solid fa-moon"></i>
+                        <div>
+                            <h4>Simulate Midnight Theme</h4>
+                            <p style="font-size:12px; opacity:0.7;">Invert style colors to instantly test native dark system performance.</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="sandbox-stage" class="sandbox-stage-glass wireframe-mode">
+                    <div class="sandbox-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                            <strong style="text-transform:uppercase; font-size:12px; letter-spacing:1px;">Module System Component Alpha</strong>
+                            <span style="width:10px; height:10px; border-radius:50%; background:var(--primary-pink);"></span>
+                        </div>
+                        <p style="font-size:14px; opacity:0.8; margin-bottom:15px;">This mock container element allows you to simulate custom visual rules without rewriting code architectures. Push buttons to test reactive state rendering.</p>
+                        <div style="height:4px; background:var(--primary-pink); border-radius:2px; width:65%;"></div>
+                    </div>
+                    <div class="sandbox-card" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:13px; font-weight:700;"><i class="fa-solid fa-circle-check" style="color:var(--graph-green); margin-right:8px;"></i> Pipeline Integrity Confirmed</span>
+                        <span style="font-family:'Staatliches'; font-size:1.2rem; color:var(--primary-pink);">99.2 FPS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="technical-specs">
+        <div class="container">
+            <div class="section-header">
+                <p>Standardized Stack Blueprint</p>
+                <h2>What's Built Into Every Project</h2>
+            </div>
+            <div style="max-width:1100px; margin:0 auto; width:100%;">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Core Service Feature</th>
+                            <th>Target Standard</th>
+                            <th>Implementation Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Mobile Optimization</strong></td>
+                            <td>100% Fully Responsive</td>
+                            <td>Guaranteed seamless performance on all smartphone, tablet, and desktop viewports.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Blazing Fast Speed</strong></td>
+                            <td>Under 1.5 Seconds Load</td>
+                            <td>Optimized script architecture, code minification, and compressed image asset generation.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SEO & Search Ranking</strong></td>
+                            <td>Google-Friendly Blueprint</td>
+                            <td>Semantic structural markup and layout mapping built to maximize your organic search visibility.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Data Security Guard</strong></td>
+                            <td>SSL & Clean Code</td>
+                            <td>Fully encrypted end-to-end user interactions and modern script safeguards against threats.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Seamless Content Admin</strong></td>
+                            <td>Dynamic Admin Dashboard</td>
+                            <td>Easy-to-use background configuration panel so you can update site content without a developer.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    
+<section id="online-growth" class="dark-section-variant">
+        <div class="container">
+            <div class="section-header">
+                <p>Our Features</p>
+                <h2>How We Help You Grow</h2>
+            </div>
+            <div class="card-carousel-grid">
+                <div class="glass-feature-card">
+                    <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=400&q=80" class="card-display-img" alt="SEO Analysis">
+                    <h3>Search Engine Optimization (SEO)</h3>
+                    <p>We build our websites using clear code structures so search engines like Google can easily find and rank your website, helping you bring in more consistent traffic.</p>
+                </div>
+                <div class="glass-feature-card">
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80" class="card-display-img" alt="Conversion Layout">
+                    <h3>Designed to Get Customers</h3>
+                    <p>We organize your layout and contact buttons in a way that makes sense to visitors, ensuring it is easy for them to fill out forms, call you, or book an appointment.</p>
+                </div>
+                <div class="glass-feature-card">
+                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80" class="card-display-img" alt="Mobile View Testing">
+                    <h3>Works on All Screens</h3>
+                    <p>Your website automatically reshapes its images, text, and structure so it functions beautifully whether a customer is looking at it on a large desktop monitor, a tablet, or a smartphone.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section id="digital-future">
+        <div class="container">
+            <div class="showcase-row" style="margin-bottom:0;">
+                <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=700&q=80" class="showcase-img" alt="Global Network Abstract Blue Cyber Graphics Mesh Lines Shape">
+                <div class="showcase-text">
+                    <p style="color:var(--primary-pink); font-weight:700; text-transform:uppercase; letter-spacing:3px; margin-bottom:10px;">Future-Proof Frameworks</p>
+                    <h3 style="font-family:'Staatliches'; font-size:4rem; line-height:1; margin-bottom:20px;">READY FOR YOUR DIGITAL FUTURE</h3>
+                    <p>As web engineering technologies adapt, your underlying digital architecture stays solid. Our frameworks are organized to expand securely, letting you introduce e-commerce portals, loyalty systems, or customer directories without having to start over from scratch.</p>
+                    <button onclick="smoothScroll('#portal')" class="btn-system btn-pink-filled">Secure Your Blueprint Token</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="pricing">
+        <div class="container">
+            <div class="section-header">
+                <p>Investment Tiers</p>
+                <h2>PRODUCTION SETUP PACKAGES</h2>
+            </div>
+            <div class="pricing-grid">
+                <div class="price-card">
+                    <h3>Starter Package</h3>
+                    <div class="price-tag"><span class="strike-out">AED500</span>FREE</div>
+                    <div class="revision-indicator"><i class="fa-solid fa-layer-group"></i> Up to 5 Production Sections</div>
+                    <ul class="price-list">
+                        <li><i class="fa-solid fa-check"></i> Bespoke UI Mockup Design</li>
+                        <li><i class="fa-solid fa-check"></i> 100% Secure Code Compilation</li>
+                        <li><i class="fa-solid fa-check"></i> Initial Standard SEO Tag Staging</li>
+                        <li><i class="fa-solid fa-check"></i> 3 Comprehensive Revision Iterations</li>
+                        <li style="opacity:0.4; text-decoration:line-through;"><i class="fa-solid fa-xmark"></i> CMS Infrastructure Installation</li>
+                    </ul>
+                    <button onclick="pickTierOption('Core Launch Blueprint')" class="btn-system btn-pink-outline" style="width:100%;">Select Package Config</button>
+                </div>
+                <div class="price-card featured">
+                    <div class="launch-badge">Popular</div>
+                    <h3>Standard Pckage</h3>
+                    <div class="price-tag"><span class="strike-out">AED1000</span>FREE</div>
+                    <div class="revision-indicator"><i class="fa-solid fa-layer-group"></i> Up to 12 Production Sections</div>
+                    <ul class="price-list">
+                        <li><i class="fa-solid fa-check"></i> Immersive UI/UX Interactive Layouts</li>
+                        <li><i class="fa-solid fa-check"></i> Content Management Engine Setup</li>
+                        <li><i class="fa-solid fa-check"></i> Premium Search Engine Optimization</li>
+                        <li><i class="fa-solid fa-check"></i> Unlimited Revision Safeguard Cycles</li>
+                        <li><i class="fa-solid fa-check"></i> Priority API Pipeline Provisioning</li>
+                    </ul>
+                    <button onclick="pickTierOption('Growth Engine Elite')" class="btn-system btn-pink-filled" style="width:100%;">Select Package Config</button>
+                </div>
+                <div class="price-card">
+                    <h3>Premium Package</h3>
+                    <div class="price-tag"><span class="strike-out">AED1500</span>FREE</div>
+                    <div class="revision-indicator"><i class="fa-solid fa-layer-group"></i> Tailored Unlimited Bounds</div>
+                    <ul class="price-list">
+                        <li><i class="fa-solid fa-check"></i> Full Strategic Blueprint Mapping</li>
+                        <li><i class="fa-solid fa-check"></i> E-Commerce Core Integrations</li>
+                        <li><i class="fa-solid fa-check"></i> Advanced Portal Security Tokens</li>
+                        <li><i class="fa-solid fa-check"></i> Dedicated Engineering Pipeline</li>
+                        <li><i class="fa-solid fa-check"></i> Lifetime Structural Updates</li>
+                    </ul>
+                    <button onclick="pickTierOption('Apex Enterprise Custom')" class="btn-system btn-pink-outline" style="width:100%;">Select Package Config</button>
+                </div>
+            </div>
+            
+            
+
+
+
+
+
+<div class="container" style="padding-top: 60px; display: flex; justify-content: center; width: 100%;">
+                <a name="form649794553" id="formAnchor649794553"></a>
+                <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdqI4ow_gQGT7s1wBKkaMNeZu5F4IjyGk_NclVSPyKfEgoBjQ/viewform?embedded=true" width="100%" height="500" frameborder="0" marginheight="0" marginwidth="0" style="max-width: 1100px; border-radius: 16px; box-shadow: var(--card-shadow); border: 1px solid var(--blur-border);">Loading…</iframe>
+            </div>
+
+
+
+
+
+
+
+        </div>
+    </section>
+           
+    <footer class="prestige-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3>AIM <span>ALTITUDE</span></h3>
+                    <p>High-end digital engineering and interactive visual interfaces configured to secure absolute competitive market authority for premium corporate modern enterprises.</p>
+                </div>
+                <div class="footer-column">
+                    <h4>Digital Routes</h4>
+                    <ul class="footer-links">
+                        <li><a href="#services">Design Capabilities</a></li>
+                        <li><a href="#utilities">Functional Utilities</a></li>
+                        <li><a href="#case-studies">Production Record Work</a></li>
+                        <li><a href="#pricing">Blueprint Package Tier Pricing</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>System Details</h4>
+                    <ul class="footer-links">
+                        <li><a href="#technical-specs">Technical Stack Standards</a></li>
+                        <li><a href="#architecture">Sandbox Laboratory Module</a></li>
+                        <li><a href="#metrics">Performance Analytics Stats</a></li>
+                        <li><a href="#portal">Secure Project Terminal Portal</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Corporate Guard</h4>
+                    <ul class="footer-links">
+                        <li><a href="#home">Privacy Data Protection Safeguard</a></li>
+                        <li><a href="#home">Terms of Interactive System Use</a></li>
+                        <li><a href="#home">Regulatory Pipeline Verification</a></li>
+                        <li><a href="#home">Engineering Matrix Status Updates</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div>&copy; 2026 AIM Altitude Interactive Engineering Layouts Ltd. All absolute legal rights preserved globally.</div>
+                <div class="footer-socials">
+                    <a href="#home"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#home"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="#home"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#home"><i class="fa-brands fa-github"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        /* Custom Interactive Cursor Matrix Tracking */
+        const cursorDot = document.getElementById('custom-cursor');
+        document.addEventListener('mousemove', (e) => {
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+        });
+        
+        document.querySelectorAll('a, button, .service-card, .mini-metric-card, .lab-btn, .addon-item, .radio-tile').forEach(elem => {
+            elem.addEventListener('mouseenter', () => {
+                cursorDot.style.width = '35px';
+                cursorDot.style.height = '35px';
+                cursorDot.style.backgroundColor = 'rgba(255, 51, 102, 0.1)';
+            });
+            elem.addEventListener('mouseleave', () => {
+                cursorDot.style.width = '18px';
+                cursorDot.style.height = '18px';
+                cursorDot.style.backgroundColor = 'transparent';
+            });
+        });
+
+        /* Scroll Interaction Reveal Intersection Observers System */
+        const masterSections = document.querySelectorAll('section');
+        const scrollRevealObserverOptions = { threshold: 0.15, rootMargin: "0px 0px -50px 0px" };
+        
+        const scrollRevealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('reveal-active');
+                }
+            });
+        }, scrollRevealObserverOptions);
+
+        masterSections.forEach(section => scrollRevealObserver.observe(section));
+
+        /* Smooth Anchor Viewport Navigation Matrix */
+        function smoothScroll(targetSelector) {
+            const destElement = document.querySelector(targetSelector);
+            if (destElement) {
+                destElement.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        /* Nav Link Active State Syncing */
+        window.addEventListener('scroll', () => {
+            let currentActiveId = "";
+            masterSections.forEach(sec => {
+                const sectionTop = sec.offsetTop;
+                if (pageYOffset >= sectionTop - 220) {
+                    currentActiveId = sec.getAttribute('id');
+                }
+            });
+            document.querySelectorAll('.nav-menu a').forEach(link => {
+                link.classList.remove('active-bookmark');
+                if (link.getAttribute('href') === `#${currentActiveId}`) {
+                    link.classList.add('active-bookmark');
+                }
+            });
+        });
+
+        /* Interactive Service Grid Demonstration Alert Handlers */
+        function triggerMiniInteraction(techAreaKey) {
+            const systemResponsesMatrix = {
+                uiux: "Bespoke UI/UX Pipeline Grid Response Activated! Testing visual element rendering states under custom 60fps view guidelines.",
+                native: "Modern Web Development Code Compiler Active! JavaScript ESNext script bundles compressed, audited, and cached successfully.",
+                optim: "Staging Pipeline Optimizer Triggered! Core Web Vitals audited: First Contentful Paint metrics verified steady at 0.4 seconds."
+            };
+            alert(systemResponsesMatrix[techAreaKey] || "Custom sub-element matrix ping verified.");
+        }
+
+        /* Interactive Prototype Sandbox Configuration Modifier */
+        function adjustSandboxMode(selectedModeStyleKey, clickedButtonSource) {
+            const stageElement = document.getElementById('sandbox-stage');
+            stageElement.className = "sandbox-stage-glass"; 
+            stageElement.classList.add(`${selectedModeStyleKey}-mode`);
+            document.querySelectorAll('.lab-btn').forEach(btn => btn.classList.remove('active-control'));
+            clickedButtonSource.classList.add('active-control');
+        }
+        
+        /* Pricing Selection Indicator */
+        function pickTierOption(tierPackageNameText) {
+            alert(`Selected Config: ${tierPackageNameText}. Please complete the terminal portal forms below to lock in the blueprint queue.`);
+            smoothScroll('#formAnchor649794553');
+        }
+    </script>
+</body>
+</html>
