@@ -10,6 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Staatliches&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+
     <style>
         /* --- Design Tokens & Color Palette --- */
         :root {
@@ -19,12 +22,13 @@
             --dark-pink: #D11A4D;
             --text-dark: #1A1C23;
             --text-muted: #5C6275;
-            --card-shadow: 0 20px 40px rgba(255, 51, 102, 0.06);
+            --card-shadow: 0 20px 40px rgba(255, 51, 102, 0.08);
             --blur-border: rgba(255, 51, 102, 0.15);
             --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             --tabby-green: #39FFB8;
             --graph-blue: #00E5FF;
             --graph-green: #10B981;
+            --cyber-glow: 0 0 20px rgba(255, 51, 102, 0.6), 0 0 40px rgba(255, 51, 102, 0.2);
             
             /* Glassmorphism */
             --glass-bg: rgba(255, 255, 255, 0.6);
@@ -39,10 +43,6 @@
             box-sizing: border-box; 
         }
         
-        html { 
-            scroll-behavior: smooth; 
-        }
-        
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--bg-pure);
@@ -52,24 +52,32 @@
             position: relative;
         }
 
-        /* --- Geometric Background --- */
+        /* --- Live Changing Gradient Canvas --- */
         .bg-canvas {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -2;
             pointer-events: none;
-            background-image: 
-                radial-gradient(rgba(255, 30, 39, 0.15) 1px, transparent 2px),
-                linear-gradient(135deg, #FAFAFC 0%, #F0F3FA 100%);
-            background-size: 50px 50px, 100% 100%;
+            background: linear-gradient(125deg, #FAFAFC, #F0F3FA, #FFEAF0, #E6F9FF, #FAFAFC);
+            background-size: 400% 400%;
+            animation: liveGradientShift 18s ease infinite;
+        }
+
+        .bg-grid-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2;
+            pointer-events: none;
+            background-image: radial-gradient(rgba(255, 30, 39, 0.08) 1px, transparent 2px);
+            background-size: 40px 40px;
         }
 
         /* Dynamic Glowing Orbs */
         .ambient-glow {
-            position: fixed; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(100px); opacity: 0.4;
+            position: fixed; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(120px); opacity: 0.5;
         }
-        .glow-1 { top: -10%; left: -5%; width: 50vw; height: 50vw; background: rgba(255, 51, 102, 0.15); animation: float 20s ease-in-out infinite alternate; }
-        .glow-2 { bottom: -10%; right: -5%; width: 40vw; height: 40vw; background: rgba(0, 229, 255, 0.1); animation: float 15s ease-in-out infinite alternate-reverse; }
+        .glow-1 { top: -10%; left: -5%; width: 50vw; height: 50vw; background: rgba(255, 51, 102, 0.2); animation: float 15s ease-in-out infinite alternate; }
+        .glow-2 { bottom: -10%; right: -5%; width: 40vw; height: 40vw; background: rgba(0, 229, 255, 0.15); animation: float 12s ease-in-out infinite alternate-reverse; }
 
         /* Animated Geometric Background Rings */
         .geo-circle {
@@ -77,27 +85,26 @@
         }
         .geo-circle-1 { width: 800px; height: 800px; top: -15%; right: -10%; border: 2px dashed rgba(255, 51, 102, 0.1); animation: rotateCircle 60s linear infinite; }
         .geo-circle-2 { width: 500px; height: 500px; bottom: 5%; left: -10%; border: 1px solid rgba(0, 229, 255, 0.15); animation: rotateCircleReverse 45s linear infinite; }
-        .geo-circle-3 { width: 1200px; height: 1200px; top: 10%; left: 30%; border: 1px dashed rgba(26, 28, 35, 0.03); animation: rotateCircle 90s linear infinite; }
 
         /* --- Floating Sticky Button --- */
         .sticky-action-shelf { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 12px; z-index: 999; }
         .sticky-pill {
-            background: rgba(26, 28, 35, 0.9); backdrop-filter: var(--glass-blur); color: #FFF;
+            background: rgba(26, 28, 35, 0.95); backdrop-filter: var(--glass-blur); color: #FFF;
             padding: 16px 28px; border-radius: 50px; text-decoration: none; font-size: 13px; font-weight: 700;
-            text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.2);
             transition: var(--transition-smooth); cursor: pointer; animation: pulseGlow 3s infinite ease-in-out;
         }
         .sticky-pill:hover {
             transform: translateY(-5px) scale(1.02); background: var(--primary-pink);
-            border-color: rgba(255,255,255,0.4); box-shadow: 0 20px 40px rgba(255, 51, 102, 0.3);
+            border-color: rgba(255,255,255,0.4); box-shadow: var(--cyber-glow);
         }
 
         /* --- Custom Interactive Cursor Indicator --- */
         #custom-cursor {
             width: 18px; height: 18px; border: 2px solid var(--primary-pink); border-radius: 50%;
             position: fixed; transform: translate(-50%, -50%); pointer-events: none; z-index: 9999;
-            transition: width 0.2s, height 0.2s, background-color 0.2s; mix-blend-mode: multiply;
+            transition: width 0.2s, height 0.2s, background-color 0.2s, box-shadow 0.2s; mix-blend-mode: multiply;
         }
 
         /* --- Navigation Bar --- */
@@ -109,23 +116,23 @@
         }
         .nav-inner { max-width: 1650px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 18px 40px; }
         .logo-package { display: flex; align-items: center; gap: 12px; text-decoration: none; font-family: 'Staatliches', sans-serif; font-size: 1.8rem; color: var(--text-dark); }
-        .logo-package span { color: var(--primary-pink); }
+        .logo-package span { color: var(--primary-pink); text-shadow: 0 0 10px rgba(255,51,102,0.2); }
         .logo-package img { height: 35px; width: auto; object-fit: contain; }
         .nav-menu { display: flex; list-style: none; gap: 20px; align-items: center; }
         .nav-menu a {
             color: var(--text-dark); text-decoration: none; font-weight: 700; font-size: 11px;
             text-transform: uppercase; letter-spacing: 1px; position: relative; transition: var(--transition-smooth);
         }
-        .nav-menu a:hover, .nav-menu a.active-bookmark { color: var(--primary-pink); }
+        .nav-menu a:hover, .nav-menu a.active-bookmark { color: var(--primary-pink); text-shadow: 0 0 8px rgba(255, 51, 102, 0.3); }
 
         /* --- Structural Containers --- */
         .container { width: 100%; max-width: 1650px; margin: 0 auto; padding: 0 40px; }
         section { padding: 140px 0; width: 100%; display: flex; flex-direction: column; justify-content: center; opacity: 0; transform: translateY(40px); transition: var(--transition-smooth); }
-        section.reveal-active { opacity: 1; transform: translateY(0); animation: fadeInUp 0.8s ease forwards; }
+        section.reveal-active { opacity: 1; transform: translateY(0); }
 
         .section-header { text-align: center; margin-bottom: 70px; }
         .section-header h2 { font-family: 'Staatliches', sans-serif; font-size: 5rem; letter-spacing: 1px; line-height: 1; text-transform: uppercase; color: var(--text-dark); }
-        .section-header p { color: var(--primary-pink); font-weight: 700; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 10px; }
+        .section-header p { color: var(--primary-pink); font-weight: 700; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255,51,102,0.15); }
 
         /* --- Dark Section Modifications --- */
         section.dark-section-variant { background-color: #1A1C23; position: relative; overflow: hidden; }
@@ -133,12 +140,12 @@
         section.dark-section-variant .service-card { background: #232630; border-color: rgba(255, 51, 102, 0.15); }
         section.dark-section-variant .service-card h3 { color: #FAFAFC; }
         section.dark-section-variant .service-card p { color: #CDD4E4; }
-        section.dark-section-variant .service-card:hover { background: #2A2E3D; border-color: var(--primary-pink); }
+        section.dark-section-variant .service-card:hover { background: #2A2E3D; border-color: var(--primary-pink); box-shadow: var(--cyber-glow); }
         section.dark-section-variant .lab-btn { background: #232630; border-color: rgba(255, 51, 102, 0.1); color: #FAFAFC; }
         section.dark-section-variant .lab-btn h4 { color: #FAFAFC; }
         section.dark-section-variant .lab-btn p { color: #CDD4E4; }
         section.dark-section-variant .lab-btn.active-control, 
-        section.dark-section-variant .lab-btn:hover { background: #2A2E3D; border-color: var(--primary-pink); }
+        section.dark-section-variant .lab-btn:hover { background: #2A2E3D; border-color: var(--primary-pink); box-shadow: 0 0 15px rgba(255,51,102,0.2); }
         section.dark-section-variant .glass-feature-card { background: rgba(35, 38, 48, 0.85); border-color: rgba(255, 255, 255, 0.1); }
         section.dark-section-variant .glass-feature-card h3 { color: #FAFAFC; }
         section.dark-section-variant .glass-feature-card p { color: #CDD4E4; }
@@ -146,45 +153,44 @@
         /* --- Buttons System --- */
         .btn-system { display: inline-block; padding: 16px 38px; border-radius: 50px; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; cursor: pointer; transition: var(--transition-smooth); border: none; }
         .btn-pink-filled { background-color: var(--primary-pink); color: #FFF; box-shadow: 0 10px 30px rgba(255, 51, 102, 0.2); }
-        .btn-pink-filled:hover { background-color: var(--dark-pink); transform: translateY(-4px); box-shadow: 0 15px 35px rgba(255, 51, 102, 0.35); }
+        .btn-pink-filled:hover { background-color: var(--dark-pink); transform: translateY(-4px); box-shadow: var(--cyber-glow); }
         .btn-pink-outline { background-color: transparent; color: var(--primary-pink); border: 2px solid var(--primary-pink); }
-        .btn-pink-outline:hover { background-color: rgba(255, 51, 102, 0.05); transform: translateY(-4px); }
+        .btn-pink-outline:hover { background-color: rgba(255, 51, 102, 0.05); transform: translateY(-4px); box-shadow: 0 0 15px rgba(255,51,102,0.1); }
 
-        /* --- Hero Section --- */
-/* --- Hero Section --- */
-#home { 
-    background-image: linear-gradient(rgba(250, 250, 252, 0.85), rgba(250, 250, 252, 0.85)), url('bg.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    border-bottom: 1px solid var(--blur-border);
-}        
-
-
-        .hero-layout { display: flex; align-items: center; justify-content: space-between; gap: 80px; position: relative; }
+        /* --- Hero Section & 3D Stage --- */
+        #home { 
+            position: relative;
+            border-bottom: 1px solid var(--blur-border);
+            overflow: hidden;
+        }        
+        .hero-layout { display: flex; align-items: center; justify-content: space-between; gap: 80px; position: relative; z-index: 2; }
         .hero-intro { flex: 1; max-width: 750px; }
         .hero-intro h1 { font-family: 'Staatliches', sans-serif; font-size: 7.5rem; line-height: 0.9; margin-bottom: 25px; color: var(--text-dark); }
-        .hero-intro h1 span { color: var(--primary-pink); }
+        .hero-intro h1 span { color: var(--primary-pink); animation: textGlowPulse 4s infinite alternate; }
         .hero-intro p { font-size: 1.3rem; color: var(--text-muted); margin-bottom: 40px; max-width: 650px; }
+        
         .hero-display { flex: 1; display: flex; justify-content: flex-end; position: relative; }
-        .hero-display-showcase { width: 650px; height: 650px; position: relative; display: flex; align-items: center; justify-content: center; perspective: 1200px; }
-        .floating-canvas { width: 100%; height: 100%; background: #FFF; position: relative; z-index: 1; border-radius: 24px; overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,0.15); border: 2px solid var(--blur-border); transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); transform: rotateX(5deg) rotateY(-10deg); }
-        .hero-display-showcase:hover .floating-canvas { transform: rotateX(-10deg) rotateY(15deg) translateZ(20px); }
-        .floating-canvas img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.8s ease; }
+        .hero-display-showcase { width: 650px; height: 650px; position: relative; display: flex; align-items: center; justify-content: center; }
+        
+        /* 3D Canvas Containment Structure */
+        #canvas3d-container {
+            width: 100%; height: 100%; position: absolute; top: 0; left: 0;
+            border-radius: 24px; overflow: hidden; filter: drop-shadow(0 30px 50px rgba(255,51,102,0.15));
+            pointer-events: auto;
+        }
 
         /* --- Endless Bidirectional Marquee --- */
-        .marquee-container { width: 100%; overflow: hidden; background: var(--primary-pink); padding: 18px 0; display: flex; white-space: nowrap; align-items: center; border-bottom: 2px solid #1A1C23; }
+        .marquee-container { width: 100%; overflow: hidden; background: var(--primary-pink); padding: 18px 0; display: flex; white-space: nowrap; align-items: center; border-bottom: 2px solid #1A1C23; box-shadow: var(--cyber-glow); }
         .marquee-track { display: flex; animation: marqueeAnimation 25s linear infinite; }
         .marquee-content { font-family: 'Staatliches', sans-serif; font-size: 2.5rem; color: #FAFAFC; letter-spacing: 2px; display: flex; align-items: center; gap: 60px; padding-right: 60px; text-transform: uppercase; }
         .marquee-content span { display: flex; align-items: center; gap: 15px; }
         .marquee-content i { color: #1A1C23; font-size: 1.5rem; }
-        @keyframes marqueeAnimation { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
 
         /* --- Benefits Showcase Slider --- */
         .showcase-slider-wrapper { position: relative; width: 100%; margin-top: 20px; }
         .slider-controls-mini { display: flex; justify-content: center; gap: 15px; margin-bottom: 35px; }
         .slider-nav-btn { background: #FFF; border: 1px solid var(--blur-border); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--card-shadow); transition: var(--transition-smooth); color: var(--text-dark); font-size: 1.1rem; }
-        .slider-nav-btn:hover { background: var(--primary-pink); color: #FFF; border-color: var(--primary-pink); transform: scale(1.05); }
+        .slider-nav-btn:hover { background: var(--primary-pink); color: #FFF; border-color: var(--primary-pink); transform: scale(1.05); box-shadow: var(--cyber-glow); }
         
         .slider-track-container { display: flex; gap: 30px; overflow-x: auto; padding: 20px 10px 40px 10px; scroll-behavior: smooth; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
         .slider-track-container::-webkit-scrollbar { height: 6px; }
@@ -221,7 +227,7 @@
         /* --- Utilities Stack --- */
         .utility-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; }
         .utility-card { background: #FFF; border: 1px solid var(--blur-border); padding: 45px; border-radius: 32px; box-shadow: var(--card-shadow); display: flex; gap: 25px; align-items: flex-start; transition: var(--transition-smooth); flex-direction: column; }
-        .utility-card:hover { transform: scale(1.02); border-color: var(--primary-pink); }
+        .utility-card:hover { transform: scale(1.02); border-color: var(--primary-pink); box-shadow: var(--card-shadow); }
         .utility-icon-box { background: rgba(255, 51, 102, 0.05); width: 65px; height: 65px; border-radius: 20px; display: flex; align-items: center; justify-content: center; color: var(--primary-pink); font-size: 1.8rem; border: 1px solid var(--blur-border); }
         .utility-content h3 { font-family: 'Staatliches', sans-serif; font-size: 2rem; margin-bottom: 10px; color: var(--text-dark); }
         .utility-media-wrap { width: 100%; height: 240px; border-radius: 16px; margin-top: 15px; overflow: hidden; border: 1px solid var(--blur-border); }
@@ -230,7 +236,8 @@
         /* --- Case Studies --- */
         .showcase-row { display: grid; grid-template-columns: 1fr 1.2fr; gap: 60px; align-items: center; margin-bottom: 60px; }
         .showcase-row.reverse { grid-template-columns: 1.2fr 1fr; }
-        .showcase-img { width: 100%; height: 400px; border-radius: 24px; object-fit: cover; box-shadow: var(--card-shadow); border: 1px solid var(--blur-border); }
+        .showcase-img { width: 100%; height: 400px; border-radius: 24px; object-fit: cover; box-shadow: var(--card-shadow); border: 1px solid var(--blur-border); filter: grayscale(20%); transition: var(--transition-smooth); }
+        .showcase-img:hover { filter: grayscale(0%) drop-shadow(0 15px 30px rgba(255,51,102,0.15)); }
         .showcase-text h3 { font-family: 'Staatliches', sans-serif; font-size: 2.5rem; margin-bottom: 15px; color: var(--text-dark); }
         .showcase-text p { color: var(--text-muted); margin-bottom: 20px; }
 
@@ -260,7 +267,7 @@
         /* --- Growth Carousel Grid --- */
         .card-carousel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
         .glass-feature-card { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: 28px; padding: 40px; box-shadow: var(--glass-shadow); transition: var(--transition-smooth); display: flex; flex-direction: column; gap: 20px; }
-        .glass-feature-card:hover { transform: translateY(-10px) scale(1.02); border-color: var(--primary-pink); }
+        .glass-feature-card:hover { transform: translateY(-10px) scale(1.02); border-color: var(--primary-pink); box-shadow: var(--cyber-glow); }
         .card-display-img { width: 100%; height: 200px; border-radius: 16px; object-fit: cover; border: 1px solid var(--blur-border); }
         .glass-feature-card h3 { font-family: 'Staatliches', sans-serif; font-size: 2rem; color: var(--text-dark); }
         .glass-feature-card p { color: var(--text-muted); }
@@ -278,7 +285,8 @@
         /* --- Pricing Architecture --- */
         .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 35px; }
         .price-card { background: #FFF; padding: 55px 40px; border-radius: 35px; border: 1px solid var(--blur-border); text-align: center; transition: var(--transition-smooth); position: relative; overflow: hidden; }
-        .price-card.featured { background: var(--bg-soft); border: 2px solid var(--primary-pink); transform: scale(1.03); }
+        .price-card.featured { background: var(--bg-soft); border: 2px solid var(--primary-pink); transform: scale(1.03); box-shadow: 0 20px 40px rgba(255,51,102,0.1); }
+        .price-card.featured:hover { box-shadow: var(--cyber-glow); }
         .price-card h3 { font-family: 'Staatliches', sans-serif; font-size: 2.6rem; color: var(--text-dark); }
         .price-tag { font-family: 'Staatliches', sans-serif; font-size: 4.5rem; color: var(--primary-pink); margin-bottom: 20px; }
         .price-tag .strike-out { font-size: 2rem; color: var(--text-muted); text-decoration: line-through; margin-right: 10px; opacity: 0.6; }
@@ -296,7 +304,7 @@
         .checkout-header-badge { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--primary-pink); font-size: 12px; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px; }
 
         /* --- Footer --- */
-        .prestige-footer { background: #1A1C23; color: #FAFAFC; padding: 90px 0 40px 0; border-top: 3px solid var(--primary-pink); position: relative; }
+        .prestige-footer { background: #1A1C23; color: #FAFAFC; padding: 90px 0 40px 0; border-top: 3px solid var(--primary-pink); position: relative; box-shadow: 0 -10px 30px rgba(255,51,102,0.1); }
         .footer-grid { display: grid; grid-template-columns: 1.5fr repeat(3, 1fr); gap: 60px; margin-bottom: 60px; }
         .footer-brand h3 { font-family: 'Staatliches', sans-serif; font-size: 2.5rem; margin-bottom: 15px; }
         .footer-brand h3 span { color: var(--primary-pink); }
@@ -305,18 +313,27 @@
         .footer-links { list-style: none; }
         .footer-links li { margin-bottom: 12px; }
         .footer-links a { color: #CDD4E4; text-decoration: none; font-size: 14px; font-weight: 600; transition: color 0.2s; }
-        .footer-links a:hover { color: var(--primary-pink); }
+        .footer-links a:hover { color: var(--primary-pink); text-shadow: 0 0 10px rgba(255,51,102,0.4); }
         .footer-bottom { padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; font-size: 13px; color: #8A92A6; }
         .footer-socials { display: flex; gap: 15px; }
         .footer-socials a { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; color: #FFF; text-decoration: none; transition: var(--transition-smooth); }
-        .footer-socials a:hover { background: var(--primary-pink); transform: translateY(-3px); }
+        .footer-socials a:hover { background: var(--primary-pink); transform: translateY(-3px); box-shadow: var(--cyber-glow); }
 
-        /* --- Animations --- */
+        /* --- Keyframe Architectures --- */
+        @keyframes liveGradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes textGlowPulse {
+            0% { text-shadow: 0 0 10px rgba(255,51,102,0.2); }
+            100% { text-shadow: 0 0 25px rgba(255,51,102,0.7), 0 0 45px rgba(255,51,102,0.3); }
+        }
         @keyframes rotateCircle { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes rotateCircleReverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
         @keyframes float { 0% { transform: translateY(0px) scale(1); } 100% { transform: translateY(-30px) scale(1.05); } }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 20px 40px rgba(0,0,0,0.15); } 50% { box-shadow: 0 20px 40px rgba(255, 51, 102, 0.25); transform: scale(1.03); } }
+        @keyframes marqueeAnimation { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 20px 40px rgba(0,0,0,0.15); } 50% { box-shadow: var(--cyber-glow); transform: scale(1.03); } }
 
         /* --- Responsive Queries --- */
         @media (max-width: 1250px) {
@@ -345,11 +362,11 @@
     </div>
 
     <div class="bg-canvas"></div>
+    <div class="bg-grid-overlay"></div>
     <div class="ambient-glow glow-1"></div>
     <div class="ambient-glow glow-2"></div>
     <div class="geo-circle geo-circle-1"></div>
     <div class="geo-circle geo-circle-2"></div>
-    <div class="geo-circle geo-circle-3"></div>
     <div id="custom-cursor"></div>
 
     <header id="main-header">
@@ -359,16 +376,16 @@
                 AIM <span>ALTITUDE</span>
             </a>
             <ul class="nav-menu" id="navigation-links-list">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#benefits">Benefits</a></li>
-                <li><a href="#services">Services</a></li>
-                <li><a href="#utilities">Features</a></li>
-                <li><a href="#case-studies">Work</a></li>
-                <li><a href="#architecture">Sandbox</a></li>
-                <li><a href="#technical-specs">Specs</a></li>
-                <li><a href="#online-growth">Growth</a></li>
-                <li><a href="#faq">FAQ</a></li>
-                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#home" data-scroll-target="#home">Home</a></li>
+                <li><a href="#benefits" data-scroll-target="#benefits">Benefits</a></li>
+                <li><a href="#services" data-scroll-target="#services">Services</a></li>
+                <li><a href="#utilities" data-scroll-target="#utilities">Features</a></li>
+                <li><a href="#case-studies" data-scroll-target="#case-studies">Work</a></li>
+                <li><a href="#architecture" data-scroll-target="#architecture">Sandbox</a></li>
+                <li><a href="#technical-specs" data-scroll-target="#technical-specs">Specs</a></li>
+                <li><a href="#online-growth" data-scroll-target="#online-growth">Growth</a></li>
+                <li><a href="#faq" data-scroll-target="#faq">FAQ</a></li>
+                <li><a href="#pricing" data-scroll-target="#pricing">Pricing</a></li>
             </ul>
             <button onclick="navigateToCheckout('Header CTA Quick Launch')" class="btn-system btn-pink-filled" style="padding: 12px 28px;">Get Started</button>
         </div>
@@ -383,15 +400,13 @@
                         <h1>WE BUILD WEBSITES FOR <span>SUCCESS</span>.</h1>
                         <p>Beautiful, fast, custom websites designed to give your company instant digital credibility and scale smoothly as your brand grows.</p>
                         <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                            <button onclick="smoothScroll('#pricing')" class="btn-system btn-pink-filled">See Our Packages</button>
-                            <button onclick="smoothScroll('#services')" class="btn-system btn-pink-outline">Explore What We Do</button>
+                            <button onclick="lenisScrollTo('#pricing')" class="btn-system btn-pink-filled">See Our Packages</button>
+                            <button onclick="lenisScrollTo('#services')" class="btn-system btn-pink-outline">Explore What We Do</button>
                         </div>
                     </div>
                     <div class="hero-display">
                         <div class="hero-display-showcase">
-                            <div class="floating-canvas">
-                                <img src="pic1.png" alt="Interface Showcase Dashboard Layout">
-                            </div>
+                            <div id="canvas3d-container"></div>
                         </div>
                     </div>
                 </div>
@@ -556,14 +571,14 @@
                     <div class="showcase-text">
                         <h3>Aura Prestige Logistics</h3>
                         <p>A high-end cargo blueprint redesign that took their presentation metrics from simple tracking notes into an immersive digital luxury experience.</p>
-                        <button onclick="smoothScroll('#pricing')" class="btn-system btn-pink-outline">Review Scope Details</button>
+                        <button onclick="lenisScrollTo('#pricing')" class="btn-system btn-pink-outline">Review Scope Details</button>
                     </div>
                 </div>
                 <div class="showcase-row reverse">
                     <div class="showcase-text">
                         <h3>Apex FinTech Frameworks</h3>
                         <p>An ultra-secure, rapid application structural update enabling secure credential onboarding, intuitive graph interactions, and fluid account data switching tools.</p>
-                        <button onclick="smoothScroll('#pricing')" class="btn-system btn-pink-outline">Review Scope Details</button>
+                        <button onclick="lenisScrollTo('#pricing')" class="btn-system btn-pink-outline">Review Scope Details</button>
                     </div>
                     <img src="pic5.png" class="showcase-img" alt="Apex Fintech Financial Statistics">
                 </div>
@@ -803,15 +818,15 @@
                 <div class="footer-column">
                     <h4>Digital Routes</h4>
                     <ul class="footer-links">
-                        <li><a href="#services">Design Capabilities</a></li>
-                        <li><a href="#utilities">Functional Utilities</a></li>
+                        <li><a href="#services" data-scroll-target="#services">Design Capabilities</a></li>
+                        <li><a href="#utilities" data-scroll-target="#utilities">Functional Utilities</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
                     <h4>System Details</h4>
                     <ul class="footer-links">
-                        <li><a href="#technical-specs">Technical Stack Standards</a></li>
-                        <li><a href="#architecture">Sandbox Laboratory Module</a></li>
+                        <li><a href="#technical-specs" data-scroll-target="#technical-specs">Technical Stack Standards</a></li>
+                        <li><a href="#architecture" data-scroll-target="#architecture">Sandbox Laboratory Module</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
@@ -834,7 +849,128 @@
     </footer>
 
     <script>
-        /* Custom Interactive Cursor Tracking */
+        /* --- LENIS INERTIAL SMOOTH SCROLL ENGINE INITIALIZATION --- */
+        const lenis = new Lenis({
+            duration: 1.4,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Gradual slowdown math curve
+            direction: 'vertical',
+            gestureDirection: 'vertical',
+            smooth: true,
+            mouseMultiplier: 1,
+            linearInterpolation: false
+        });
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // Connect Lenis smoothly to local links
+        function lenisScrollTo(targetSelector) {
+            lenis.scrollTo(targetSelector, {
+                offset: -80,
+                immediate: false,
+                duration: 1.5
+            });
+        }
+
+        // Intercept header link clicks for smooth deceleration scrolls
+        document.querySelectorAll('.nav-menu a, footer a[data-scroll-target]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                const targetId = link.getAttribute('data-scroll-target');
+                if(targetId) {
+                    e.preventDefault();
+                    lenisScrollTo(targetId);
+                }
+            });
+        });
+
+
+        /* --- THREE.JS LIVE 3D INTERACTIVE HERO ANIMATION FRAME --- */
+        const container3d = document.getElementById('canvas3d-container');
+        const scene = new THREE.Scene();
+        
+        // Camera setup
+        const camera = new THREE.PerspectiveCamera(45, container3d.clientWidth / container3d.clientHeight, 0.1, 1000);
+        camera.position.z = 5.5;
+
+        // Renderer configuration with alpha transparency
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container3d.clientWidth, container3d.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container3d.appendChild(renderer.domElement);
+
+        // Build 3D Shape Geometry: Digital Torus Mesh
+        const geometry = new THREE.TorusKnotGeometry(1.2, 0.38, 150, 20, 3, 4);
+        
+        // Material with advanced visual cyber-glowing physics
+        const material = new THREE.MeshPhysicalMaterial({
+            color: 0xFF3366,
+            roughness: 0.1,
+            metalness: 0.8,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.1,
+            wireframe: true,
+            emissive: 0x3a0010,
+            emissiveIntensity: 0.6
+        });
+        
+        const torusKnot = new THREE.Mesh(geometry, material);
+        scene.add(torusKnot);
+
+        // Core lighting grids
+        const pointLight1 = new THREE.PointLight(0x00E5FF, 2, 50);
+        pointLight1.position.set(5, 5, 5);
+        scene.add(pointLight1);
+
+        const pointLight2 = new THREE.PointLight(0xFF3366, 2, 50);
+        pointLight2.position.set(-5, -5, 5);
+        scene.add(pointLight2);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(ambientLight);
+
+        // Tracking cursor mouse mapping values for geometry deformation
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetX = 0;
+        let targetY = 0;
+
+        window.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - window.innerWidth / 2) * 0.0015;
+            mouseY = (event.clientY - window.innerHeight / 2) * 0.0015;
+        });
+
+        // Responsive Resizer
+        window.addEventListener('resize', () => {
+            camera.aspect = container3d.clientWidth / container3d.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container3d.clientWidth, container3d.clientHeight);
+        });
+
+        // 3D Loop execution
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+
+            // Natural constant rotational momentum loop
+            torusKnot.rotation.x += 0.004;
+            torusKnot.rotation.y += 0.006;
+
+            // Fluid interactive morph tracking based on cursor coordinates
+            targetX += (mouseX - targetX) * 0.05;
+            targetY += (mouseY - targetY) * 0.05;
+
+            torusKnot.rotation.z += targetX * 0.05;
+            torusKnot.position.x = targetX * 0.6;
+            torusKnot.position.y = -targetY * 0.6;
+
+            renderer.render(scene, camera);
+        }
+        animate3D();
+
+
+        /* --- DYNAMIC GLOW AND LINK TRACKING CURSOR ENGINE --- */
         const cursorDot = document.getElementById('custom-cursor');
         document.addEventListener('mousemove', (e) => {
             cursorDot.style.left = e.clientX + 'px';
@@ -843,18 +979,23 @@
         
         document.querySelectorAll('a, button, .service-card, .lab-btn, .benefit-slider-card').forEach(elem => {
             elem.addEventListener('mouseenter', () => {
-                cursorDot.style.width = '35px';
-                cursorDot.style.height = '35px';
-                cursorDot.style.backgroundColor = 'rgba(255, 51, 102, 0.1)';
+                cursorDot.style.width = '45px';
+                cursorDot.style.height = '45px';
+                cursorDot.style.backgroundColor = 'rgba(255, 51, 102, 0.15)';
+                cursorDot.style.boxShadow = '0 0 20px rgba(255, 51, 102, 0.5)';
+                cursorDot.style.borderColor = 'var(--primary-pink)';
             });
             elem.addEventListener('mouseleave', () => {
                 cursorDot.style.width = '18px';
                 cursorDot.style.height = '18px';
                 cursorDot.style.backgroundColor = 'transparent';
+                cursorDot.style.boxShadow = 'none';
+                cursorDot.style.borderColor = 'var(--primary-pink)';
             });
         });
 
-        /* Benefit Showcase Slider Horizontal Movement Trigger */
+
+        /* --- PRE-EXISTING APP UTILITY CONTROLLERS --- */
         function slideShowcase(direction) {
             const track = document.getElementById('benefits-track');
             const cardScrollOffset = 430; 
@@ -865,7 +1006,6 @@
             }
         }
 
-        /* Dynamic FAQ Accordion Controller */
         function toggleFaq(buttonElement) {
             const currentItem = buttonElement.parentElement;
             const isOpen = currentItem.classList.contains('active');
@@ -879,7 +1019,6 @@
             }
         }
 
-        /* Scroll Reveal intersection Configuration */
         const masterSections = document.querySelectorAll('section');
         const scrollRevealObserverOptions = { threshold: 0.10, rootMargin: "0px 0px -40px 0px" };
         
@@ -893,14 +1032,6 @@
 
         masterSections.forEach(section => scrollRevealObserver.observe(section));
 
-        function smoothScroll(targetSelector) {
-            const destElement = document.querySelector(targetSelector);
-            if (destElement) {
-                destElement.scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-
-        /* Active Navigation Tab Highlighting */
         window.addEventListener('scroll', () => {
             if (document.getElementById('main-landing-view').style.display === 'none') return;
             let currentActiveId = "";
@@ -935,31 +1066,22 @@
             clickedButtonSource.classList.add('active-control');
         }
         
-        /* --- SPA Views Architecture Navigation Routing Functions --- */
         function navigateToCheckout(tierPackageNameText) {
-            // Hide Landing Layer & Show Checkout View Section
             document.getElementById('main-landing-view').style.display = 'none';
             document.getElementById('isolated-checkout-view').style.display = 'block';
-            
-            // Adjust configuration fields dynamically
             document.getElementById('checkout-chosen-tier-title').innerText = tierPackageNameText;
-            
-            // Hide standard index anchor navbar and smooth reset view focus limits
             document.getElementById('navigation-links-list').style.visibility = 'hidden';
             document.getElementById('global-sticky-action').style.display = 'none';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            lenis.scrollTo(0, { immediate: true });
         }
 
         function returnToLanding(event) {
             if(event) event.preventDefault();
-            // Restore Landing Layer & Close Checkout
             document.getElementById('main-landing-view').style.display = 'block';
             document.getElementById('isolated-checkout-view').style.display = 'none';
-            
-            // Re-enable global visibility elements
             document.getElementById('navigation-links-list').style.visibility = 'visible';
             document.getElementById('global-sticky-action').style.display = 'flex';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            lenis.scrollTo(0, { immediate: true });
         }
     </script>
 </body>
