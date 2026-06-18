@@ -24,24 +24,18 @@
             --text-muted: #5C6275;
             --card-shadow: 0 20px 40px rgba(255, 51, 102, 0.08);
             --blur-border: rgba(255, 51, 102, 0.15);
-            --transition-smooth: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-smooth: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
             --tabby-green: #39FFB8;
             --graph-blue: #00E5FF;
             --graph-green: #10B981;
-            --cyber-glow: 0 0 20px rgba(255, 51, 102, 0.6), 0 0 40px rgba(255, 51, 102, 0.2);
-            
-            /* Glassmorphism */
+            --cyber-glow: 0 0 20px rgba(255, 51, 102, 0.4), 0 0 40px rgba(255, 51, 102, 0.1);
             --glass-bg: rgba(255, 255, 255, 0.6);
             --glass-blur: blur(20px);
             --glass-border: rgba(255, 255, 255, 0.7);
             --glass-shadow: 0 8px 32px 0 rgba(255, 51, 102, 0.04);
         }
 
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -52,39 +46,153 @@
             position: relative;
         }
 
+        /* --- WOW UPGRADE: Cinematic Preloader --- */
+        #wow-loader {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--text-dark);
+            z-index: 9999999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--bg-pure);
+            transition: transform 1s cubic-bezier(0.76, 0, 0.24, 1);
+            will-change: transform;
+        }
+        #wow-loader.hide {
+            transform: translateY(-100%);
+        }
+        .loader-numbers {
+            font-family: 'Staatliches', sans-serif;
+            font-size: 8rem;
+            line-height: 1;
+            color: var(--primary-pink);
+            display: flex;
+            align-items: baseline;
+        }
+        .loader-numbers span { font-size: 4rem; margin-left: 5px; color: var(--bg-pure); }
+        .loader-text-status {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 20px;
+            color: var(--text-muted);
+            animation: pulseGlow 2s infinite alternate;
+        }
+
+        /* --- Page Switch Animation Layout Overlays --- */
+        #main-landing-view, #isolated-checkout-view {
+            transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease;
+            will-change: transform, opacity;
+        }
+
+        .page-wipe-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--bg-pure), var(--bg-soft), #FFEAF0);
+            z-index: 99999;
+            transform: translateY(100%);
+            pointer-events: none;
+            transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1);
+        }
+        .page-wipe-overlay.active { transform: translateY(0); }
+        .page-wipe-overlay.exit { transform: translateY(-100%); }
+
         /* --- Live Changing Gradient Canvas --- */
         .bg-canvas {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -2;
-            pointer-events: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2; pointer-events: none;
             background: linear-gradient(125deg, #FAFAFC, #F0F3FA, #FFEAF0, #E6F9FF, #FAFAFC);
             background-size: 400% 400%;
             animation: liveGradientShift 18s ease infinite;
         }
 
         .bg-grid-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -2;
-            pointer-events: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; pointer-events: none;
             background-image: radial-gradient(rgba(255, 30, 39, 0.08) 1px, transparent 2px);
             background-size: 40px 40px;
         }
 
         /* Dynamic Glowing Orbs */
-        .ambient-glow {
-            position: fixed; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(120px); opacity: 0.5;
-        }
+        .ambient-glow { position: fixed; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(120px); opacity: 0.5; }
         .glow-1 { top: -10%; left: -5%; width: 50vw; height: 50vw; background: rgba(255, 51, 102, 0.2); animation: float 15s ease-in-out infinite alternate; }
         .glow-2 { bottom: -10%; right: -5%; width: 40vw; height: 40vw; background: rgba(0, 229, 255, 0.15); animation: float 12s ease-in-out infinite alternate-reverse; }
 
-        /* Animated Geometric Background Rings */
-        .geo-circle {
-            position: fixed; border-radius: 50%; pointer-events: none; z-index: -1; transform-origin: center;
-        }
+        .geo-circle { position: fixed; border-radius: 50%; pointer-events: none; z-index: -1; transform-origin: center; }
         .geo-circle-1 { width: 800px; height: 800px; top: -15%; right: -10%; border: 2px dashed rgba(255, 51, 102, 0.1); animation: rotateCircle 60s linear infinite; }
         .geo-circle-2 { width: 500px; height: 500px; bottom: 5%; left: -10%; border: 1px solid rgba(0, 229, 255, 0.15); animation: rotateCircleReverse 45s linear infinite; }
+
+        /* --- Custom Interactive Cursor Indicator --- */
+        #custom-cursor {
+            width: 18px; height: 18px; border: 2px solid var(--primary-pink); border-radius: 50%;
+            position: fixed; transform: translate(-50%, -50%); pointer-events: none; z-index: 9999;
+            transition: width 0.2s, height 0.2s, background-color 0.2s, box-shadow 0.2s; mix-blend-mode: multiply;
+            will-change: left, top, width, height;
+        }
+
+        /* --- Navigation Bar --- */
+        header {
+            position: fixed; top: 0px; left: 0; width: 100%;
+            background-color: rgba(250, 250, 252, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            z-index: 1000; border-bottom: 1px solid var(--blur-border); transition: top 0.4s ease-in-out;
+        }
+        .nav-inner { max-width: 1650px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 18px 40px; }
+        .logo-package { display: flex; align-items: center; gap: 12px; text-decoration: none; font-family: 'Staatliches', sans-serif; font-size: 1.8rem; color: var(--text-dark); }
+        .logo-package span { color: var(--primary-pink); text-shadow: 0 0 10px rgba(255,51,102,0.2); }
+        .logo-package img { height: 35px; width: auto; object-fit: contain; }
+        .nav-menu { display: flex; list-style: none; gap: 20px; align-items: center; }
+        .nav-menu a {
+            color: var(--text-dark); text-decoration: none; font-weight: 700; font-size: 11px;
+            text-transform: uppercase; letter-spacing: 1px; position: relative; padding: 4px 0;
+            transition: var(--transition-smooth);
+        }
+        .nav-menu a:hover, .nav-menu a.active-bookmark { color: var(--primary-pink); text-shadow: 0 0 8px rgba(255, 51, 102, 0.3); }
+        .nav-menu a::after {
+            content: ''; position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px;
+            background: var(--primary-pink); transform: scaleX(0); transform-origin: right;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .nav-menu a:hover::after, .nav-menu a.active-bookmark::after { transform: scaleX(1); transform-origin: left; }
+
+        /* --- WOW UPGRADE: Buttons System with Fast Marquee --- */
+        .btn-system { 
+            position: relative; overflow: hidden;
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 16px 38px; border-radius: 50px; font-weight: 700; font-size: 13px; text-transform: uppercase; 
+            letter-spacing: 1px; text-decoration: none; cursor: pointer; transition: var(--transition-smooth); border: none; 
+        }
+        .btn-pink-filled { background-color: var(--primary-pink); color: #FFF; box-shadow: 0 10px 30px rgba(255, 51, 102, 0.2); }
+        .btn-pink-outline { background-color: transparent; color: var(--primary-pink); border: 2px solid var(--primary-pink); }
+        
+        .btn-system:hover { transform: translateY(-5px) scale(1.03); box-shadow: 0 12px 24px rgba(255, 51, 102, 0.2); }
+        .btn-pink-filled:hover { background-color: var(--dark-pink); box-shadow: var(--cyber-glow); }
+        .btn-pink-outline:hover { background-color: rgba(255, 51, 102, 0.05); }
+        .btn-system:active { transform: translateY(-1px) scale(0.98); }
+
+        /* Marquee Inner Setup */
+        .btn-system .btn-text-main {
+            transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.4s;
+            will-change: transform, opacity;
+        }
+        .btn-system .btn-marquee-wrap {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center;
+            opacity: 0; transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.4s;
+            pointer-events: none;
+        }
+        .btn-system:hover .btn-text-main { opacity: 0; transform: translateY(-100%); }
+        .btn-system:hover .btn-marquee-wrap { opacity: 1; transform: translateY(0); }
+        
+        .btn-marquee-inner {
+            display: flex; gap: 30px; white-space: nowrap;
+            animation: btnMarqueeAnim 2.5s linear infinite;
+        }
+        @keyframes btnMarqueeAnim {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
 
         /* --- Floating Sticky Button --- */
         .sticky-action-shelf { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 12px; z-index: 999; }
@@ -94,41 +202,33 @@
             text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.2);
             transition: var(--transition-smooth); cursor: pointer; animation: pulseGlow 3s infinite ease-in-out;
+            position: relative; overflow: hidden;
         }
-        .sticky-pill:hover {
-            transform: translateY(-5px) scale(1.02); background: var(--primary-pink);
-            border-color: rgba(255,255,255,0.4); box-shadow: var(--cyber-glow);
-        }
-
-        /* --- Custom Interactive Cursor Indicator --- */
-        #custom-cursor {
-            width: 18px; height: 18px; border: 2px solid var(--primary-pink); border-radius: 50%;
-            position: fixed; transform: translate(-50%, -50%); pointer-events: none; z-index: 9999;
-            transition: width 0.2s, height 0.2s, background-color 0.2s, box-shadow 0.2s; mix-blend-mode: multiply;
-        }
-
-        /* --- Navigation Bar --- */
-        header {
-            position: fixed; top: 0px; left: 0; width: 100%;
-            background-color: rgba(250, 250, 252, 0.85); backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px); z-index: 1000;
-            border-bottom: 1px solid var(--blur-border); transition: top 0.4s ease-in-out;
-        }
-        .nav-inner { max-width: 1650px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 18px 40px; }
-        .logo-package { display: flex; align-items: center; gap: 12px; text-decoration: none; font-family: 'Staatliches', sans-serif; font-size: 1.8rem; color: var(--text-dark); }
-        .logo-package span { color: var(--primary-pink); text-shadow: 0 0 10px rgba(255,51,102,0.2); }
-        .logo-package img { height: 35px; width: auto; object-fit: contain; }
-        .nav-menu { display: flex; list-style: none; gap: 20px; align-items: center; }
-        .nav-menu a {
-            color: var(--text-dark); text-decoration: none; font-weight: 700; font-size: 11px;
-            text-transform: uppercase; letter-spacing: 1px; position: relative; transition: var(--transition-smooth);
-        }
-        .nav-menu a:hover, .nav-menu a.active-bookmark { color: var(--primary-pink); text-shadow: 0 0 8px rgba(255, 51, 102, 0.3); }
+        .sticky-pill:hover { transform: translateY(-5px) scale(1.03); }
+        .sticky-pill .btn-text-main { transition: all 0.4s cubic-bezier(0.76, 0, 0.24, 1); display: flex; align-items: center; gap: 12px; }
+        .sticky-pill .btn-marquee-wrap { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center; opacity: 0; transform: translateY(100%); transition: all 0.4s cubic-bezier(0.76, 0, 0.24, 1); }
+        .sticky-pill:hover .btn-text-main { opacity: 0; transform: translateY(-100%); }
+        .sticky-pill:hover .btn-marquee-wrap { opacity: 1; transform: translateY(0); }
 
         /* --- Structural Containers --- */
         .container { width: 100%; max-width: 1650px; margin: 0 auto; padding: 0 40px; }
-        section { padding: 140px 0; width: 100%; display: flex; flex-direction: column; justify-content: center; opacity: 0; transform: translateY(40px); transition: var(--transition-smooth); }
-        section.reveal-active { opacity: 1; transform: translateY(0); }
+        
+        /* WOW UPGRADE: Staggered Section Animations */
+        section { padding: 140px 0; width: 100%; display: flex; flex-direction: column; justify-content: center; }
+        
+        section .section-header, section .hero-intro, section .services-grid, section .utility-grid, section .pricing-grid, section .showcase-row, section .lab-grid, section .spec-table, section .card-carousel-grid, section .faq-shelf {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            will-change: transform, opacity;
+        }
+        
+        section.reveal-active .section-header { opacity: 1; transform: translateY(0); transition-delay: 0.1s; }
+        section.reveal-active .hero-intro { opacity: 1; transform: translateY(0); transition-delay: 0.1s; }
+        section.reveal-active .services-grid, section.reveal-active .utility-grid, section.reveal-active .pricing-grid, section.reveal-active .lab-grid, section.reveal-active .spec-table, section.reveal-active .card-carousel-grid, section.reveal-active .faq-shelf { 
+            opacity: 1; transform: translateY(0); transition-delay: 0.3s; 
+        }
+        section.reveal-active .showcase-row { opacity: 1; transform: translateY(0); transition-delay: 0.2s; }
 
         .section-header { text-align: center; margin-bottom: 70px; }
         .section-header h2 { font-family: 'Staatliches', sans-serif; font-size: 5rem; letter-spacing: 1px; line-height: 1; text-transform: uppercase; color: var(--text-dark); }
@@ -150,19 +250,8 @@
         section.dark-section-variant .glass-feature-card h3 { color: #FAFAFC; }
         section.dark-section-variant .glass-feature-card p { color: #CDD4E4; }
 
-        /* --- Buttons System --- */
-        .btn-system { display: inline-block; padding: 16px 38px; border-radius: 50px; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; text-decoration: none; cursor: pointer; transition: var(--transition-smooth); border: none; }
-        .btn-pink-filled { background-color: var(--primary-pink); color: #FFF; box-shadow: 0 10px 30px rgba(255, 51, 102, 0.2); }
-        .btn-pink-filled:hover { background-color: var(--dark-pink); transform: translateY(-4px); box-shadow: var(--cyber-glow); }
-        .btn-pink-outline { background-color: transparent; color: var(--primary-pink); border: 2px solid var(--primary-pink); }
-        .btn-pink-outline:hover { background-color: rgba(255, 51, 102, 0.05); transform: translateY(-4px); box-shadow: 0 0 15px rgba(255,51,102,0.1); }
-
         /* --- Hero Section & 3D Stage --- */
-        #home { 
-            position: relative;
-            border-bottom: 1px solid var(--blur-border);
-            overflow: hidden;
-        }        
+        #home { position: relative; border-bottom: 1px solid var(--blur-border); overflow: hidden; }        
         .hero-layout { display: flex; align-items: center; justify-content: space-between; gap: 80px; position: relative; z-index: 2; }
         .hero-intro { flex: 1; max-width: 750px; }
         .hero-intro h1 { font-family: 'Staatliches', sans-serif; font-size: 7.5rem; line-height: 0.9; margin-bottom: 25px; color: var(--text-dark); }
@@ -172,7 +261,6 @@
         .hero-display { flex: 1; display: flex; justify-content: flex-end; position: relative; }
         .hero-display-showcase { width: 650px; height: 650px; position: relative; display: flex; align-items: center; justify-content: center; }
         
-        /* 3D Canvas Containment Structure */
         #canvas3d-container {
             width: 100%; height: 100%; position: absolute; top: 0; left: 0;
             border-radius: 24px; overflow: hidden; filter: drop-shadow(0 30px 50px rgba(255,51,102,0.15));
@@ -190,7 +278,7 @@
         .showcase-slider-wrapper { position: relative; width: 100%; margin-top: 20px; }
         .slider-controls-mini { display: flex; justify-content: center; gap: 15px; margin-bottom: 35px; }
         .slider-nav-btn { background: #FFF; border: 1px solid var(--blur-border); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--card-shadow); transition: var(--transition-smooth); color: var(--text-dark); font-size: 1.1rem; }
-        .slider-nav-btn:hover { background: var(--primary-pink); color: #FFF; border-color: var(--primary-pink); transform: scale(1.05); box-shadow: var(--cyber-glow); }
+        .slider-nav-btn:hover { background: var(--primary-pink); color: #FFF; border-color: var(--primary-pink); }
         
         .slider-track-container { display: flex; gap: 30px; overflow-x: auto; padding: 20px 10px 40px 10px; scroll-behavior: smooth; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
         .slider-track-container::-webkit-scrollbar { height: 6px; }
@@ -320,15 +408,8 @@
         .footer-socials a:hover { background: var(--primary-pink); transform: translateY(-3px); box-shadow: var(--cyber-glow); }
 
         /* --- Keyframe Architectures --- */
-        @keyframes liveGradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        @keyframes textGlowPulse {
-            0% { text-shadow: 0 0 10px rgba(255,51,102,0.2); }
-            100% { text-shadow: 0 0 25px rgba(255,51,102,0.7), 0 0 45px rgba(255,51,102,0.3); }
-        }
+        @keyframes liveGradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes textGlowPulse { 0% { text-shadow: 0 0 10px rgba(255,51,102,0.2); } 100% { text-shadow: 0 0 25px rgba(255,51,102,0.7), 0 0 45px rgba(255,51,102,0.3); } }
         @keyframes rotateCircle { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes rotateCircleReverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
         @keyframes float { 0% { transform: translateY(0px) scale(1); } 100% { transform: translateY(-30px) scale(1.05); } }
@@ -353,11 +434,30 @@
     </style>
 </head>
 <body>
+
+    <div id="wow-loader">
+        <div class="loader-numbers">
+            <div id="loader-percentage">0</div><span>%</span>
+        </div>
+        <div class="loader-text-status">Loading Matrix Environments</div>
+    </div>
+
+    <div class="page-wipe-overlay" id="global-page-wipe"></div>
     
     <div class="sticky-action-shelf" id="global-sticky-action">
         <div onclick="navigateToCheckout('General Architecture Sync')" class="sticky-pill">
-            <i class="fa-solid fa-bolt" style="color: var(--graph-blue);"></i>
-            <span>Build Your Website Blueprint</span>
+            <span class="btn-text-main">
+                <i class="fa-solid fa-bolt" style="color: var(--graph-blue);"></i>
+                Build Your Website Blueprint
+            </span>
+            <div class="btn-marquee-wrap">
+                <div class="btn-marquee-inner">
+                    <span><i class="fa-solid fa-bolt" style="color: var(--graph-blue);"></i> Build Your Website Blueprint</span>
+                    <span><i class="fa-solid fa-bolt" style="color: var(--graph-blue);"></i> Build Your Website Blueprint</span>
+                    <span><i class="fa-solid fa-bolt" style="color: var(--graph-blue);"></i> Build Your Website Blueprint</span>
+                    <span><i class="fa-solid fa-bolt" style="color: var(--graph-blue);"></i> Build Your Website Blueprint</span>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -387,7 +487,14 @@
                 <li><a href="#faq" data-scroll-target="#faq">FAQ</a></li>
                 <li><a href="#pricing" data-scroll-target="#pricing">Pricing</a></li>
             </ul>
-            <button onclick="navigateToCheckout('Header CTA Quick Launch')" class="btn-system btn-pink-filled" style="padding: 12px 28px;">Get Started</button>
+            <button onclick="navigateToCheckout('Header CTA Quick Launch')" class="btn-system btn-pink-filled" style="padding: 12px 28px;">
+                <span class="btn-text-main">Get Started</span>
+                <div class="btn-marquee-wrap">
+                    <div class="btn-marquee-inner">
+                        <span>Get Started</span><span>Get Started</span><span>Get Started</span><span>Get Started</span>
+                    </div>
+                </div>
+            </button>
         </div>
     </header>
 
@@ -400,8 +507,22 @@
                         <h1>WE BUILD WEBSITES FOR <span>SUCCESS</span>.</h1>
                         <p>Beautiful, fast, custom websites designed to give your company instant digital credibility and scale smoothly as your brand grows.</p>
                         <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                            <button onclick="lenisScrollTo('#pricing')" class="btn-system btn-pink-filled">See Our Packages</button>
-                            <button onclick="lenisScrollTo('#services')" class="btn-system btn-pink-outline">Explore What We Do</button>
+                            <button onclick="lenisScrollTo('#pricing')" class="btn-system btn-pink-filled">
+                                <span class="btn-text-main">See Our Packages</span>
+                                <div class="btn-marquee-wrap">
+                                    <div class="btn-marquee-inner">
+                                        <span>See Our Packages</span><span>See Our Packages</span><span>See Our Packages</span><span>See Our Packages</span>
+                                    </div>
+                                </div>
+                            </button>
+                            <button onclick="lenisScrollTo('#services')" class="btn-system btn-pink-outline">
+                                <span class="btn-text-main">Explore What We Do</span>
+                                <div class="btn-marquee-wrap">
+                                    <div class="btn-marquee-inner">
+                                        <span>Explore What We Do</span><span>Explore What We Do</span><span>Explore What We Do</span><span>Explore What We Do</span>
+                                    </div>
+                                </div>
+                            </button>
                         </div>
                     </div>
                     <div class="hero-display">
@@ -571,14 +692,28 @@
                     <div class="showcase-text">
                         <h3>Aura Prestige Logistics</h3>
                         <p>A high-end cargo blueprint redesign that took their presentation metrics from simple tracking notes into an immersive digital luxury experience.</p>
-                        <button onclick="lenisScrollTo('#pricing')" class="btn-system btn-pink-outline">Review Scope Details</button>
+                        <button onclick="lenisScrollTo('#pricing')" class="btn-system btn-pink-outline">
+                            <span class="btn-text-main">Review Scope Details</span>
+                            <div class="btn-marquee-wrap">
+                                <div class="btn-marquee-inner">
+                                    <span>Review Scope Details</span><span>Review Scope Details</span><span>Review Scope Details</span><span>Review Scope Details</span>
+                                </div>
+                            </div>
+                        </button>
                     </div>
                 </div>
                 <div class="showcase-row reverse">
                     <div class="showcase-text">
                         <h3>Apex FinTech Frameworks</h3>
                         <p>An ultra-secure, rapid application structural update enabling secure credential onboarding, intuitive graph interactions, and fluid account data switching tools.</p>
-                        <button onclick="lenisScrollTo('#pricing')" class="btn-system btn-pink-outline">Review Scope Details</button>
+                        <button onclick="lenisScrollTo('#pricing')" class="btn-system btn-pink-outline">
+                            <span class="btn-text-main">Review Scope Details</span>
+                            <div class="btn-marquee-wrap">
+                                <div class="btn-marquee-inner">
+                                    <span>Review Scope Details</span><span>Review Scope Details</span><span>Review Scope Details</span><span>Review Scope Details</span>
+                                </div>
+                            </div>
+                        </button>
                     </div>
                     <img src="pic5.png" class="showcase-img" alt="Apex Fintech Financial Statistics">
                 </div>
@@ -746,7 +881,14 @@
                             <li><i class="fa-solid fa-check"></i> 100% Secure Code Compilation</li>
                             <li><i class="fa-solid fa-check"></i> Initial Standard SEO Tag Staging</li>
                         </ul>
-                        <button onclick="navigateToCheckout('Starter Launch Blueprint')" class="btn-system btn-pink-outline" style="width:100%;">Select Package Config</button>
+                        <button onclick="navigateToCheckout('Starter Launch Blueprint')" class="btn-system btn-pink-outline" style="width:100%;">
+                            <span class="btn-text-main">Select Package Config</span>
+                            <div class="btn-marquee-wrap">
+                                <div class="btn-marquee-inner">
+                                    <span>Select Package Config</span><span>Select Package Config</span><span>Select Package Config</span><span>Select Package Config</span>
+                                </div>
+                            </div>
+                        </button>
                     </div>
                     <div class="price-card featured">
                         <div class="launch-badge">Popular</div>
@@ -758,7 +900,14 @@
                             <li><i class="fa-solid fa-check"></i> Content Management Engine Setup</li>
                             <li><i class="fa-solid fa-check"></i> Premium Search Optimization</li>
                         </ul>
-                        <button onclick="navigateToCheckout('Growth Engine Elite')" class="btn-system btn-pink-filled" style="width:100%;">Select Package Config</button>
+                        <button onclick="navigateToCheckout('Growth Engine Elite')" class="btn-system btn-pink-filled" style="width:100%;">
+                            <span class="btn-text-main">Select Package Config</span>
+                            <div class="btn-marquee-wrap">
+                                <div class="btn-marquee-inner">
+                                    <span>Select Package Config</span><span>Select Package Config</span><span>Select Package Config</span><span>Select Package Config</span>
+                                </div>
+                            </div>
+                        </button>
                     </div>
                     <div class="price-card">
                         <h3>Premium Package</h3>
@@ -769,7 +918,14 @@
                             <li><i class="fa-solid fa-check"></i> E-Commerce Core Integrations</li>
                             <li><i class="fa-solid fa-check"></i> Dedicated Engineering Pipeline</li>
                         </ul>
-                        <button onclick="navigateToCheckout('Apex Enterprise Custom')" class="btn-system btn-pink-outline" style="width:100%;">Select Package Config</button>
+                        <button onclick="navigateToCheckout('Apex Enterprise Custom')" class="btn-system btn-pink-outline" style="width:100%;">
+                            <span class="btn-text-main">Select Package Config</span>
+                            <div class="btn-marquee-wrap">
+                                <div class="btn-marquee-inner">
+                                    <span>Select Package Config</span><span>Select Package Config</span><span>Select Package Config</span><span>Select Package Config</span>
+                                </div>
+                            </div>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -849,10 +1005,32 @@
     </footer>
 
     <script>
+        /* --- WOW UPGRADE: INITIAL LOADER ENGINE --- */
+        document.addEventListener("DOMContentLoaded", () => {
+            let progress = 0;
+            const loaderText = document.getElementById('loader-percentage');
+            const loaderContainer = document.getElementById('wow-loader');
+            
+            // Artificial delay generator simulating asset load
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 15) + 5;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        loaderContainer.classList.add('hide');
+                        // Trigger initial reveal on landing hero 
+                        document.querySelector('#home').classList.add('reveal-active');
+                    }, 400); // Hold at 100% momentarily before lifting
+                }
+                loaderText.innerText = progress;
+            }, 60);
+        });
+
         /* --- LENIS INERTIAL SMOOTH SCROLL ENGINE INITIALIZATION --- */
         const lenis = new Lenis({
             duration: 1.4,
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Gradual slowdown math curve
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), 
             direction: 'vertical',
             gestureDirection: 'vertical',
             smooth: true,
@@ -866,167 +1044,119 @@
         }
         requestAnimationFrame(raf);
 
-        // Connect Lenis smoothly to local links
         function lenisScrollTo(targetSelector) {
-            lenis.scrollTo(targetSelector, {
-                offset: -80,
-                immediate: false,
-                duration: 1.5
-            });
+            lenis.scrollTo(targetSelector, { offset: -80, immediate: false, duration: 1.5 });
         }
 
-        // Intercept header link clicks for smooth deceleration scrolls
         document.querySelectorAll('.nav-menu a, footer a[data-scroll-target]').forEach(link => {
             link.addEventListener('click', (e) => {
                 const targetId = link.getAttribute('data-scroll-target');
-                if(targetId) {
-                    e.preventDefault();
-                    lenisScrollTo(targetId);
-                }
+                if(targetId) { e.preventDefault(); lenisScrollTo(targetId); }
             });
         });
-
 
         /* --- THREE.JS LIVE 3D INTERACTIVE HERO ANIMATION FRAME --- */
         const container3d = document.getElementById('canvas3d-container');
         const scene = new THREE.Scene();
-        
-        // Camera setup
         const camera = new THREE.PerspectiveCamera(45, container3d.clientWidth / container3d.clientHeight, 0.1, 1000);
         camera.position.z = 5.5;
 
-        // Renderer configuration with alpha transparency
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(container3d.clientWidth, container3d.clientHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         container3d.appendChild(renderer.domElement);
 
-        // Build 3D Shape Geometry: Digital Torus Mesh
         const geometry = new THREE.TorusKnotGeometry(1.2, 0.38, 150, 20, 3, 4);
-        
-        // Material with advanced visual cyber-glowing physics
         const material = new THREE.MeshPhysicalMaterial({
-            color: 0xFF3366,
-            roughness: 0.1,
-            metalness: 0.8,
-            clearcoat: 1.0,
-            clearcoatRoughness: 0.1,
-            wireframe: true,
-            emissive: 0x3a0010,
-            emissiveIntensity: 0.6
+            color: 0xFF3366, roughness: 0.1, metalness: 0.8, clearcoat: 1.0,
+            clearcoatRoughness: 0.1, wireframe: true, emissive: 0x3a0010, emissiveIntensity: 0.6
         });
-        
         const torusKnot = new THREE.Mesh(geometry, material);
         scene.add(torusKnot);
 
-        // Core lighting grids
-        const pointLight1 = new THREE.PointLight(0x00E5FF, 2, 50);
-        pointLight1.position.set(5, 5, 5);
-        scene.add(pointLight1);
+        const pointLight1 = new THREE.PointLight(0x00E5FF, 2, 50); pointLight1.position.set(5, 5, 5); scene.add(pointLight1);
+        const pointLight2 = new THREE.PointLight(0xFF3366, 2, 50); pointLight2.position.set(-5, -5, 5); scene.add(pointLight2);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); scene.add(ambientLight);
 
-        const pointLight2 = new THREE.PointLight(0xFF3366, 2, 50);
-        pointLight2.position.set(-5, -5, 5);
-        scene.add(pointLight2);
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
-        scene.add(ambientLight);
-
-        // Tracking cursor mouse mapping values for geometry deformation
-        let mouseX = 0;
-        let mouseY = 0;
-        let targetX = 0;
-        let targetY = 0;
-
+        let mouseX = 0, mouseY = 0, target3dX = 0, target3dY = 0;
         window.addEventListener('mousemove', (event) => {
             mouseX = (event.clientX - window.innerWidth / 2) * 0.0015;
             mouseY = (event.clientY - window.innerHeight / 2) * 0.0015;
         });
 
-        // Responsive Resizer
         window.addEventListener('resize', () => {
             camera.aspect = container3d.clientWidth / container3d.clientHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(container3d.clientWidth, container3d.clientHeight);
         });
 
-        // 3D Loop execution
         function animate3D() {
             requestAnimationFrame(animate3D);
-
-            // Natural constant rotational momentum loop
-            torusKnot.rotation.x += 0.004;
-            torusKnot.rotation.y += 0.006;
-
-            // Fluid interactive morph tracking based on cursor coordinates
-            targetX += (mouseX - targetX) * 0.05;
-            targetY += (mouseY - targetY) * 0.05;
-
-            torusKnot.rotation.z += targetX * 0.05;
-            torusKnot.position.x = targetX * 0.6;
-            torusKnot.position.y = -targetY * 0.6;
-
+            torusKnot.rotation.x += 0.004; torusKnot.rotation.y += 0.006;
+            target3dX += (mouseX - target3dX) * 0.05; target3dY += (mouseY - target3dY) * 0.05;
+            torusKnot.rotation.z += target3dX * 0.05; torusKnot.position.x = target3dX * 0.6; torusKnot.position.y = -target3dY * 0.6;
             renderer.render(scene, camera);
         }
         animate3D();
 
+        /* --- CINEMATIC PAGE SWITCH TRANSITION ENGINE (SPA) --- */
+        function navigateToCheckout(tierPackageNameText) {
+            const wipe = document.getElementById('global-page-wipe');
+            const landing = document.getElementById('main-landing-view');
+            const checkout = document.getElementById('isolated-checkout-view');
+            
+            wipe.className = "page-wipe-overlay active";
+            landing.style.transform = "scale(0.96)"; landing.style.opacity = "0";
 
-        /* --- DYNAMIC GLOW AND LINK TRACKING CURSOR ENGINE --- */
-        const cursorDot = document.getElementById('custom-cursor');
-        document.addEventListener('mousemove', (e) => {
-            cursorDot.style.left = e.clientX + 'px';
-            cursorDot.style.top = e.clientY + 'px';
-        });
-        
-        document.querySelectorAll('a, button, .service-card, .lab-btn, .benefit-slider-card').forEach(elem => {
-            elem.addEventListener('mouseenter', () => {
-                cursorDot.style.width = '45px';
-                cursorDot.style.height = '45px';
-                cursorDot.style.backgroundColor = 'rgba(255, 51, 102, 0.15)';
-                cursorDot.style.boxShadow = '0 0 20px rgba(255, 51, 102, 0.5)';
-                cursorDot.style.borderColor = 'var(--primary-pink)';
-            });
-            elem.addEventListener('mouseleave', () => {
-                cursorDot.style.width = '18px';
-                cursorDot.style.height = '18px';
-                cursorDot.style.backgroundColor = 'transparent';
-                cursorDot.style.boxShadow = 'none';
-                cursorDot.style.borderColor = 'var(--primary-pink)';
-            });
-        });
+            setTimeout(() => {
+                landing.style.display = 'none'; checkout.style.display = 'block';
+                checkout.style.transform = "scale(1.04)"; checkout.style.opacity = "0";
+                
+                document.getElementById('checkout-chosen-tier-title').innerText = tierPackageNameText;
+                if(document.getElementById('navigation-links-list')) document.getElementById('navigation-links-list').style.visibility = 'hidden';
+                if(document.getElementById('global-sticky-action')) document.getElementById('global-sticky-action').style.display = 'none';
+                
+                lenis.scrollTo(0, { immediate: true });
 
-
-        /* --- PRE-EXISTING APP UTILITY CONTROLLERS --- */
-        function slideShowcase(direction) {
-            const track = document.getElementById('benefits-track');
-            const cardScrollOffset = 430; 
-            if(direction === 'left') {
-                track.scrollLeft -= cardScrollOffset;
-            } else {
-                track.scrollLeft += cardScrollOffset;
-            }
+                setTimeout(() => {
+                    checkout.style.transform = "scale(1)"; checkout.style.opacity = "1";
+                    wipe.className = "page-wipe-overlay exit";
+                }, 50);
+            }, 600); 
         }
 
-        function toggleFaq(buttonElement) {
-            const currentItem = buttonElement.parentElement;
-            const isOpen = currentItem.classList.contains('active');
-            
-            document.querySelectorAll('.faq-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            if(!isOpen) {
-                currentItem.classList.add('active');
-            }
+        function returnToLanding(event) {
+            if(event) event.preventDefault();
+            const wipe = document.getElementById('global-page-wipe');
+            const landing = document.getElementById('main-landing-view');
+            const checkout = document.getElementById('isolated-checkout-view');
+
+            wipe.className = "page-wipe-overlay active";
+            checkout.style.transform = "scale(0.96)"; checkout.style.opacity = "0";
+
+            setTimeout(() => {
+                checkout.style.display = 'none'; landing.style.display = 'block';
+                landing.style.transform = "scale(1.04)"; landing.style.opacity = "0";
+                
+                if(document.getElementById('navigation-links-list')) document.getElementById('navigation-links-list').style.visibility = 'visible';
+                if(document.getElementById('global-sticky-action')) document.getElementById('global-sticky-action').style.display = 'flex';
+                
+                lenis.scrollTo(0, { immediate: true });
+
+                setTimeout(() => {
+                    landing.style.transform = "scale(1)"; landing.style.opacity = "1";
+                    wipe.className = "page-wipe-overlay exit";
+                }, 50);
+            }, 600);
         }
 
+        /* --- WOW UPGRADE: ENHANCED INTERSECTION OBSERVER WITH STAGGER --- */
         const masterSections = document.querySelectorAll('section');
-        const scrollRevealObserverOptions = { threshold: 0.10, rootMargin: "0px 0px -40px 0px" };
+        const scrollRevealObserverOptions = { threshold: 0.15, rootMargin: "0px 0px -60px 0px" };
         
         const scrollRevealObserver = new IntersectionObserver((entries, observer) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('reveal-active');
-                }
+                if (entry.isIntersecting) { entry.target.classList.add('reveal-active'); }
             });
         }, scrollRevealObserverOptions);
 
@@ -1037,17 +1167,55 @@
             let currentActiveId = "";
             masterSections.forEach(sec => {
                 const sectionTop = sec.offsetTop;
-                if (window.pageYOffset >= sectionTop - 250) {
-                    currentActiveId = sec.getAttribute('id');
-                }
+                if (window.pageYOffset >= sectionTop - 250) { currentActiveId = sec.getAttribute('id'); }
             });
             document.querySelectorAll('.nav-menu a').forEach(link => {
                 link.classList.remove('active-bookmark');
-                if (link.getAttribute('href') === `#${currentActiveId}`) {
-                    link.classList.add('active-bookmark');
-                }
+                if (link.getAttribute('href') === `#${currentActiveId}`) { link.classList.add('active-bookmark'); }
             });
         });
+
+        /* --- FLUID POINTER MICRO-INERTIA ENGINE --- */
+        const customCursor = document.getElementById('custom-cursor');
+        let cursorX = 0, cursorY = 0, mouseTargetX = 0, mouseTargetY = 0;
+        const lerpFactor = 0.16;
+
+        window.addEventListener('mousemove', (e) => { mouseTargetX = e.clientX; mouseTargetY = e.clientY; });
+
+        function animateCursorLoop() {
+            cursorX += (mouseTargetX - cursorX) * lerpFactor;
+            cursorY += (mouseTargetY - cursorY) * lerpFactor;
+            customCursor.style.left = `${cursorX}px`; customCursor.style.top = `${cursorY}px`;
+            requestAnimationFrame(animateCursorLoop);
+        }
+        requestAnimationFrame(animateCursorLoop);
+
+        document.querySelectorAll('a, button, .service-card, .lab-btn, .benefit-slider-card, .sticky-pill, .faq-trigger').forEach(elem => {
+            elem.addEventListener('mouseenter', () => {
+                customCursor.style.width = '45px'; customCursor.style.height = '45px';
+                customCursor.style.backgroundColor = 'rgba(255, 51, 102, 0.15)';
+                customCursor.style.boxShadow = '0 0 20px rgba(255, 51, 102, 0.5)';
+            });
+            elem.addEventListener('mouseleave', () => {
+                customCursor.style.width = '18px'; customCursor.style.height = '18px';
+                customCursor.style.backgroundColor = 'transparent';
+                customCursor.style.boxShadow = 'none';
+            });
+        });
+
+        /* --- PRE-EXISTING APP UTILITY CONTROLLERS --- */
+        function slideShowcase(direction) {
+            const track = document.getElementById('benefits-track');
+            const cardScrollOffset = 430; 
+            direction === 'left' ? track.scrollLeft -= cardScrollOffset : track.scrollLeft += cardScrollOffset;
+        }
+
+        function toggleFaq(buttonElement) {
+            const currentItem = buttonElement.parentElement;
+            const isOpen = currentItem.classList.contains('active');
+            document.querySelectorAll('.faq-item').forEach(item => { item.classList.remove('active'); });
+            if(!isOpen) { currentItem.classList.add('active'); }
+        }
 
         function triggerMiniInteraction(techAreaKey) {
             const systemResponsesMatrix = {
@@ -1064,24 +1232,6 @@
             stageElement.classList.add(`${selectedModeStyleKey}-mode`);
             document.querySelectorAll('.lab-btn').forEach(btn => btn.classList.remove('active-control'));
             clickedButtonSource.classList.add('active-control');
-        }
-        
-        function navigateToCheckout(tierPackageNameText) {
-            document.getElementById('main-landing-view').style.display = 'none';
-            document.getElementById('isolated-checkout-view').style.display = 'block';
-            document.getElementById('checkout-chosen-tier-title').innerText = tierPackageNameText;
-            document.getElementById('navigation-links-list').style.visibility = 'hidden';
-            document.getElementById('global-sticky-action').style.display = 'none';
-            lenis.scrollTo(0, { immediate: true });
-        }
-
-        function returnToLanding(event) {
-            if(event) event.preventDefault();
-            document.getElementById('main-landing-view').style.display = 'block';
-            document.getElementById('isolated-checkout-view').style.display = 'none';
-            document.getElementById('navigation-links-list').style.visibility = 'visible';
-            document.getElementById('global-sticky-action').style.display = 'flex';
-            lenis.scrollTo(0, { immediate: true });
         }
     </script>
 </body>
