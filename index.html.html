@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIM Altitude | Custom Web Design & Development</title>
+    <link rel="icon" type="image/png" href="pic1.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Staatliches&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+
+    <style>
+        /* --- Design Tokens & Color Palette --- */
+        :root {
+            --bg-pure: #FAFAFC;
+            --bg-soft: #F0F2F8;
+            --primary-pink: #FF3366;
+            --dark-pink: #D11A4D;
+            --text-dark: #1A1C23;
+            --text-muted: #5C6275;
+            --card-shadow: 0 20px 40px rgba(255, 51, 102, 0.08);
+            --blur-border: rgba(255, 51, 102, 0.15);
+            --transition-smooth: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            --tabby-green: #39FFB8;
+            --graph-blue: #00E5FF;
+            --graph-green: #10B981;
+            --cyber-glow: 0 0 20px rgba(255, 51, 102, 0.4), 0 0 40px rgba(255, 51, 102, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.6);
+            --glass-blur: blur(20px);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --glass-shadow: 0 8px 32px 0 rgba(255, 51, 102, 0.04);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-pure);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* --- WOW UPGRADE: Cinematic Preloader --- */
+        #wow-loader {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: var(--text-dark);
+            z-index: 9999999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--bg-pure);
+            transition: transform 1s cubic-bezier(0.76, 0, 0.24, 1);
+            will-change: transform;
+        }
+        #wow-loader.hide {
+            transform: translateY(-100%);
+        }
+        .loader-numbers {
+            font-family: 'Staatliches', sans-serif;
+            font-size: 8rem;
+            line-height: 1;
+            color: var(--primary-pink);
+            display: flex;
+            align-items: baseline;
+        }
+        .loader-numbers span { font-size: 4rem; margin-left: 5px; color: var(--bg-pure); }
+        .loader-text-status {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 20px;
+            color: var(--text-muted);
+            animation: pulseGlow 2s infinite alternate;
+        }
+
+        /* --- Page Switch Animation Layout Overlays --- */
+        #main-landing-view, #isolated-checkout-view {
+            transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease;
+            will-change: transform, opacity;
+        }
+
+        .page-wipe-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, var(--bg-pure), var(--bg-soft), #FFEAF0);
+            z-index: 99999;
+            transform: translateY(100%);
+            pointer-events: none;
+            transition: transform 0.6s cubic-bezier(0.76, 0, 0.24, 1);
+        }
+        .page-wipe-overlay.active { transform: translateY(0); }
+        .page-wipe-overlay.exit { transform: translateY(-100%); }
+
+        /* --- Live Changing Gradient Canvas --- */
+        .bg-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2; pointer-events: none;
+            background: linear-gradient(125deg, #FAFAFC, #F0F3FA, #FFEAF0, #E6F9FF, #FAFAFC);
+            background-size: 400% 400%;
+            animation: liveGradientShift 18s ease infinite;
+        }
+
+        .bg-grid-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; pointer-events: none;
+            background-image: radial-gradient(rgba(255, 30, 39, 0.08) 1px, transparent 2px);
+            background-size: 40px 40px;
+        }
+
+        /* Dynamic Glowing Orbs */
+        .ambient-glow { position: fixed; z-index: -1; pointer-events: none; border-radius: 50%; filter: blur(120px); opacity: 0.5; }
+        .glow-1 { top: -10%; left: -5%; width: 50vw; height: 50vw; background: rgba(255, 51, 102, 0.2); animation: float 15s ease-in-out infinite alternate; }
+        .glow-2 { bottom: -10%; right: -5%; width: 40vw; height: 40vw; background: rgba(0, 229, 255, 0.15); animation: float 12s ease-in-out infinite alternate-reverse; }
+
+        .geo-circle { position: fixed; border-radius: 50%; pointer-events: none; z-index: -1; transform-origin: center; }
+        .geo-circle-1 { width: 800px; height: 800px; top: -15%; right: -10%; border: 2px dashed rgba(255, 51, 102, 0.1); animation: rotateCircle 60s linear infinite; }
+        .geo-circle-2 { width: 500px; height: 500px; bottom: 5%; left: -10%; border: 1px solid rgba(0, 229, 255, 0.15); animation: rotateCircleReverse 45s linear infinite; }
+
+        /* --- Custom Interactive Cursor Indicator --- */
+        #custom-cursor {
+            width: 18px; height: 18px; border: 2px solid var(--primary-pink); border-radius: 50%;
+            position: fixed; transform: translate(-50%, -50%); pointer-events: none; z-index: 9999;
+            transition: width 0.2s, height 0.2s, background-color 0.2s, box-shadow 0.2s; mix-blend-mode: multiply;
+            will-change: left, top, width, height;
+        }
+
+        /* --- Navigation Bar --- */
+        header {
+            position: fixed; top: 0px; left: 0; width: 100%;
+            background-color: rgba(250, 250, 252, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            z-index: 1000; border-bottom: 1px solid var(--blur-border); transition: top 0.4s ease-in-out;
+        }
+        .nav-inner { max-width: 1650px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 18px 40px; }
+        .logo-package { display: flex; align-items: center; gap: 12px; text-decoration: none; font-family: 'Staatliches', sans-serif; font-size: 1.8rem; color: var(--text-dark); }
+        .logo-package span { color: var(--primary-pink); text-shadow: 0 0 10px rgba(255,51,102,0.2); }
+        .logo-package img { height: 35px; width: auto; object-fit: contain; }
+        .nav-menu { display: flex; list-style: none; gap: 20px; align-items: center; }
+        .nav-menu a {
+            color: var(--text-dark); text-decoration: none; font-weight: 700; font-size: 11px;
+            text-transform: uppercase; letter-spacing: 1px; position: relative; padding: 4px 0;
+            transition: var(--transition-smooth);
+        }
+        .nav-menu a:hover, .nav-menu a.active-bookmark { color: var(--primary-pink); text-shadow: 0 0 8px rgba(255, 51, 102, 0.3); }
+        .nav-menu a::after {
+            content: ''; position: absolute; bottom: -4px; left: 0; width: 100%; height: 2px;
+            background: var(--primary-pink); transform: scaleX(0); transform-origin: right;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .nav-menu a:hover::after, .nav-menu a.active-bookmark::after { transform: scaleX(1); transform-origin: left; }
+
+        /* --- WOW UPGRADE: Buttons System with Fast Marquee --- */
+        .btn-system { 
+            position: relative; overflow: hidden;
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 16px 38px; border-radius: 50px; font-weight: 700; font-size: 13px; text-transform: uppercase; 
+            letter-spacing: 1px; text-decoration: none; cursor: pointer; transition: var(--transition-smooth); border: none; 
+        }
+        .btn-pink-filled { background-color: var(--primary-pink); color: #FFF; box-shadow: 0 10px 30px rgba(255, 51, 102, 0.2); }
+        .btn-pink-outline { background-color: transparent; color: var(--primary-pink); border: 2px solid var(--primary-pink); }
+        
+        .btn-system:hover { transform: translateY(-5px) scale(1.03); box-shadow: 0 12px 24px rgba(255, 51, 102, 0.2); }
+        .btn-pink-filled:hover { background-color: var(--dark-pink); box-shadow: var(--cyber-glow); }
+        .btn-pink-outline:hover { background-color: rgba(255, 51, 102, 0.05); }
+        .btn-system:active { transform: translateY(-1px) scale(0.98); }
+
+        /* Marquee Inner Setup */
+        .btn-system .btn-text-main {
+            transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.4s;
+            will-change: transform, opacity;
+        }
+        .btn-system .btn-marquee-wrap {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center;
+            opacity: 0; transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.4s;
+            pointer-events: none;
+        }
+        .btn-system:hover .btn-text-main { opacity: 0; transform: translateY(-100%); }
+        .btn-system:hover .btn-marquee-wrap { opacity: 1; transform: translateY(0); }
+        
+        .btn-marquee-inner {
+            display: flex; gap: 30px; white-space: nowrap;
+            animation: btnMarqueeAnim 2.5s linear infinite;
+        }
+        @keyframes btnMarqueeAnim {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* --- Floating Sticky Button --- */
+        .sticky-action-shelf { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 12px; z-index: 999; }
+        .sticky-pill {
+            background: rgba(26, 28, 35, 0.95); backdrop-filter: var(--glass-blur); color: #FFF;
+            padding: 16px 28px; border-radius: 50px; text-decoration: none; font-size: 13px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.2);
+            transition: var(--transition-smooth); cursor: pointer; animation: pulseGlow 3s infinite ease-in-out;
+            position: relative; overflow: hidden;
+        }
+        .sticky-pill:hover { transform: translateY(-5px) scale(1.03); }
+        .sticky-pill .btn-text-main { transition: all 0.4s cubic-bezier(0.76, 0, 0.24, 1); display: flex; align-items: center; gap: 12px; }
+        .sticky-pill .btn-marquee-wrap { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center; opacity: 0; transform: translateY(100%); transition: all 0.4s cubic-bezier(0.76, 0, 0.24, 1); }
+        .sticky-pill:hover .btn-text-main { opacity: 0; transform: translateY(-100%); }
+        .sticky-pill:hover .btn-marquee-wrap { opacity: 1; transform: translateY(0); }
+
+        /* --- Structural Containers --- */
+        .container { width: 100%; max-width: 1650px; margin: 0 auto; padding: 0 40px; }
+        
+        /* WOW UPGRADE: Staggered Section Animations */
+        section { padding: 140px 0; width: 100%; display: flex; flex-direction: column; justify-content: center; }
+        
+        section .section-header, section .hero-intro, section .services-grid, section .utility-grid, section .pricing-grid, section .showcase-row, section .lab-grid, section .spec-table, section .card-carousel-grid, section .faq-shelf {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            will-change: transform, opacity;
+        }
+        
+        section.reveal-active .section-header { opacity: 1; transform: translateY(0); transition-delay: 0.1s; }
+        section.reveal-active .hero-intro { opacity: 1; transform: translateY(0); transition-delay: 0.1s; }
+        section.reveal-active .services-grid, section.reveal-active .utility-grid, section.reveal-active .pricing-grid, section.reveal-active .lab-grid, section.reveal-active .spec-table, section.reveal-active .card-carousel-grid, section.reveal-active .faq-shelf { 
+            opacity: 1; transform: translateY(0); transition-delay: 0.3s; 
+        }
+        section.reveal-active .showcase-row { opacity: 1; transform: translateY(0); transition-delay: 0.2s; }
+
+        .section-header { text-align: center; margin-bottom: 70px; }
+        .section-header h2 { font-family: 'Staatliches', sans-serif; font-size: 5rem; letter-spacing: 1px; line-height: 1; text-transform: uppercase; color: var(--text-dark); }
+        .section-header p { color: var(--primary-pink); font-weight: 700; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255,51,102,0.15); }
+
+        /* --- Dark Section Modifications --- */
+        section.dark-section-variant { background-color: #1A1C23; position: relative; overflow: hidden; }
+        section.dark-section-variant .section-header h2 { color: #FAFAFC; }
+        section.dark-section-variant .service-card { background: #232630; border-color: rgba(255, 51, 102, 0.15); }
+        section.dark-section-variant .service-card h3 { color: #FAFAFC; }
+        section.dark-section-variant .service-card p { color: #CDD4E4; }
+        section.dark-section-variant .service-card:hover { background: #2A2E3D; border-color: var(--primary-pink); box-shadow: var(--cyber-glow); }
+        section.dark-section-variant .lab-btn { background: #232630; border-color: rgba(255, 51, 102, 0.1); color: #FAFAFC; }
+        section.dark-section-variant .lab-btn h4 { color: #FAFAFC; }
+        section.dark-section-variant .lab-btn p { color: #CDD4E4; }
+        section.dark-section-variant .lab-btn.active-control, 
+        section.dark-section-variant .lab-btn:hover { background: #2A2E3D; border-color: var(--primary-pink); box-shadow: 0 0 15px rgba(255,51,102,0.2); }
+        section.dark-section-variant .glass-feature-card { background: rgba(35, 38, 48, 0.85); border-color: rgba(255, 255, 255, 0.1); }
+        section.dark-section-variant .glass-feature-card h3 { color: #FAFAFC; }
+        section.dark-section-variant .glass-feature-card p { color: #CDD4E4; }
+
+        /* --- Hero Section & 3D Stage --- */
+        #home { position: relative; border-bottom: 1px solid var(--blur-border); overflow: hidden; }        
+        .hero-layout { display: flex; align-items: center; justify-content: space-between; gap: 80px; position: relative; z-index: 2; }
+        .hero-intro { flex: 1; max-width: 750px; }
+        .hero-intro h1 { font-family: 'Staatliches', sans-serif; font-size: 7.5rem; line-height: 0.9; margin-bottom: 25px; color: var(--text-dark); }
+        .hero-intro h1 span { color: var(--primary-pink); animation: textGlowPulse 4s infinite alternate; }
+        .hero-intro p { font-size: 1.3rem; color: var(--text-muted); margin-bottom: 40px; max-width: 650px; }
+        
+        .hero-display { flex: 1; display: flex; justify-content: flex-end; position: relative; }
+        .hero-display-showcase { width: 650px; height: 650px; position: relative; display: flex; align-items: center; justify-content: center; }
+        
+        #canvas3d-container {
+            width: 100%; height: 100%; position: absolute; top: 0; left: 0;
+            border-radius: 24px; overflow: hidden; filter: drop-shadow(0 30px 50px rgba(255,51,102,0.15));
+            pointer-events: auto;
+        }
+
+        /* --- Endless Bidirectional Marquee --- */
+        .marquee-container { width: 100%; overflow: hidden; background: var(--primary-pink); padding: 18px 0; display: flex; white-space: nowrap; align-items: center; border-bottom: 2px solid #1A1C23; box-shadow: var(--cyber-glow); }
+        .marquee-track { display: flex; animation: marqueeAnimation 25s linear infinite; }
+        .marquee-content { font-family: 'Staatliches', sans-serif; font-size: 2.5rem; color: #FAFAFC; letter-spacing: 2px; display: flex; align-items: center; gap: 60px; padding-right: 60px; text-transform: uppercase; }
+        .marquee-content span { display: flex; align-items: center; gap: 15px; }
+        .marquee-content i { color: #1A1C23; font-size: 1.5rem; }
+
+        /* --- Benefits Showcase Slider --- */
+        .showcase-slider-wrapper { position: relative; width: 100%; margin-top: 20px; }
+        .slider-controls-mini { display: flex; justify-content: center; gap: 15px; margin-bottom: 35px; }
+        .slider-nav-btn { background: #FFF; border: 1px solid var(--blur-border); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--card-shadow); transition: var(--transition-smooth); color: var(--text-dark); font-size: 1.1rem; }
+        .slider-nav-btn:hover { background: var(--primary-pink); color: #FFF; border-color: var(--primary-pink); }
+        
+        .slider-track-container { display: flex; gap: 30px; overflow-x: auto; padding: 20px 10px 40px 10px; scroll-behavior: smooth; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+        .slider-track-container::-webkit-scrollbar { height: 6px; }
+        .slider-track-container::-webkit-scrollbar-thumb { background: rgba(255, 51, 102, 0.2); border-radius: 10px; }
+        
+        .benefit-slider-card { flex: 0 0 400px; scroll-snap-align: start; background: #FFF; border-radius: 28px; border: 1px solid var(--blur-border); padding: 40px; box-shadow: var(--card-shadow); transition: var(--transition-smooth); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+        .benefit-slider-card:hover { transform: translateY(-10px); border-color: var(--primary-pink); box-shadow: 0 25px 50px rgba(255, 51, 102, 0.12); }
+        .benefit-card-tag { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--primary-pink); background: rgba(255, 51, 102, 0.05); padding: 6px 14px; border-radius: 30px; align-self: flex-start; margin-bottom: 25px; letter-spacing: 0.5px; }
+        .benefit-slider-card h3 { font-size: 1.8rem; font-weight: 700; color: var(--text-dark); line-height: 1.2; margin-bottom: 15px; }
+        .benefit-slider-card p { color: var(--text-muted); font-size: 0.98rem; margin-bottom: 30px; }
+        
+        .benefit-metrics-row { display: flex; gap: 25px; border-top: 1px solid var(--bg-soft); padding-top: 20px; margin-top: auto; }
+        .benefit-stat-box { display: flex; flex-direction: column; }
+        .benefit-stat-num { font-family: 'Staatliches', sans-serif; font-size: 2rem; color: var(--primary-pink); line-height: 1; }
+        .benefit-stat-lbl { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        
+        .benefit-slider-card.variant-dark { background: #1A1C23; border-color: rgba(255,255,255,0.05); }
+        .benefit-slider-card.variant-dark h3 { color: #FFF; }
+        .benefit-slider-card.variant-dark p { color: #CDD4E4; }
+        .benefit-slider-card.variant-dark .benefit-card-tag { background: rgba(0, 229, 255, 0.1); color: var(--graph-blue); }
+        .benefit-slider-card.variant-dark .benefit-stat-lbl { color: #8A92A6; }
+        
+        .benefit-slider-card.variant-lime { background: #E2FF44; border-color: transparent; }
+        .benefit-slider-card.variant-lime .benefit-card-tag { background: rgba(0,0,0,0.05); color: var(--text-dark); }
+        .benefit-slider-card.variant-lime h3, .benefit-slider-card.variant-lime p, .benefit-slider-card.variant-lime .benefit-stat-num, .benefit-slider-card.variant-lime .benefit-stat-lbl { color: #1A1C23; }
+
+        /* --- Services Grid --- */
+        .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .service-card { background: #FFF; border: 1px solid var(--blur-border); padding: 50px 40px; border-radius: 24px; box-shadow: var(--card-shadow); transition: var(--transition-smooth); cursor: pointer; position: relative; overflow: hidden; }
+        .service-card i { font-size: 2.8rem; color: var(--primary-pink); margin-bottom: 25px; transition: transform 0.3s ease; }
+        .service-card h3 { font-family: 'Staatliches', sans-serif; font-size: 2.2rem; margin-bottom: 15px; color: var(--text-dark); }
+        .service-card p { color: var(--text-muted); }
+
+        /* --- Utilities Stack --- */
+        .utility-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; }
+        .utility-card { background: #FFF; border: 1px solid var(--blur-border); padding: 45px; border-radius: 32px; box-shadow: var(--card-shadow); display: flex; gap: 25px; align-items: flex-start; transition: var(--transition-smooth); flex-direction: column; }
+        .utility-card:hover { transform: scale(1.02); border-color: var(--primary-pink); box-shadow: var(--card-shadow); }
+        .utility-icon-box { background: rgba(255, 51, 102, 0.05); width: 65px; height: 65px; border-radius: 20px; display: flex; align-items: center; justify-content: center; color: var(--primary-pink); font-size: 1.8rem; border: 1px solid var(--blur-border); }
+        .utility-content h3 { font-family: 'Staatliches', sans-serif; font-size: 2rem; margin-bottom: 10px; color: var(--text-dark); }
+        .utility-media-wrap { width: 100%; height: 240px; border-radius: 16px; margin-top: 15px; overflow: hidden; border: 1px solid var(--blur-border); }
+        .utility-media-wrap img { width: 100%; height: 100%; object-fit: cover; transition: var(--transition-smooth); }
+
+        /* --- Case Studies --- */
+        .showcase-row { display: grid; grid-template-columns: 1fr 1.2fr; gap: 60px; align-items: center; margin-bottom: 60px; }
+        .showcase-row.reverse { grid-template-columns: 1.2fr 1fr; }
+        .showcase-img { width: 100%; height: 400px; border-radius: 24px; object-fit: cover; box-shadow: var(--card-shadow); border: 1px solid var(--blur-border); filter: grayscale(20%); transition: var(--transition-smooth); }
+        .showcase-img:hover { filter: grayscale(0%) drop-shadow(0 15px 30px rgba(255,51,102,0.15)); }
+        .showcase-text h3 { font-family: 'Staatliches', sans-serif; font-size: 2.5rem; margin-bottom: 15px; color: var(--text-dark); }
+        .showcase-text p { color: var(--text-muted); margin-bottom: 20px; }
+
+        /* --- Interactive Sandbox Layout --- */
+        .lab-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 60px; align-items: center; }
+        .lab-controls { display: flex; flex-direction: column; gap: 15px; }
+        .lab-btn { padding: 20px 25px; background: #FFF; border: 1px solid var(--blur-border); border-radius: 16px; cursor: pointer; text-align: left; transition: var(--transition-smooth); display: flex; align-items: center; gap: 20px; color: var(--text-dark); }
+        .lab-btn h4 { font-family: 'Staatliches', sans-serif; font-size: 1.5rem; }
+        
+        .sandbox-stage-glass { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: 32px; padding: 40px; min-height: 400px; box-shadow: var(--glass-shadow); display: flex; flex-direction: column; gap: 20px; transition: var(--transition-smooth); }
+        
+        .sandbox-card { background: rgba(255, 255, 255, 0.9); border-radius: 16px; padding: 25px; border: 1px solid rgba(255,255,255,0.5); }
+        .sandbox-card strong, .sandbox-card p { color: #1A1C23 !important; }
+        .sandbox-stage-glass.wireframe-mode .sandbox-card { border: 2px dashed var(--primary-pink); background: transparent; }
+        .sandbox-stage-glass.bounds-mode { gap: 40px; padding: 60px; }
+        .sandbox-stage-glass.dark-mode { background: #1A1C23; }
+        .sandbox-stage-glass.dark-mode .sandbox-card { background: #2A2E3D; border-color: transparent; }
+        .sandbox-stage-glass.dark-mode .sandbox-card strong { color: #FFF !important; }
+        .sandbox-stage-glass.dark-mode .sandbox-card p { color: #CDD4E4 !important; }
+
+        /* --- Technical Specifications --- */
+        .spec-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #FFF; border-radius: 16px; overflow: hidden; border: 1px solid var(--blur-border); }
+        .spec-table th, .spec-table td { padding: 18px 24px; text-align: left; }
+        .spec-table th { background: #1A1C23; color: #FFF; font-family: 'Staatliches', sans-serif; font-size: 1.2rem; }
+        .spec-table tr:nth-child(even) { background: var(--bg-soft); }
+
+        /* --- Growth Carousel Grid --- */
+        .card-carousel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+        .glass-feature-card { background: var(--glass-bg); backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-border); border-radius: 28px; padding: 40px; box-shadow: var(--glass-shadow); transition: var(--transition-smooth); display: flex; flex-direction: column; gap: 20px; }
+        .glass-feature-card:hover { transform: translateY(-10px) scale(1.02); border-color: var(--primary-pink); box-shadow: var(--cyber-glow); }
+        .card-display-img { width: 100%; height: 200px; border-radius: 16px; object-fit: cover; border: 1px solid var(--blur-border); }
+        .glass-feature-card h3 { font-family: 'Staatliches', sans-serif; font-size: 2rem; color: var(--text-dark); }
+        .glass-feature-card p { color: var(--text-muted); }
+
+        /* --- FAQ Accordion System --- */
+        .faq-shelf { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
+        .faq-item { background: #FFF; border: 1px solid var(--blur-border); border-radius: 16px; overflow: hidden; transition: var(--transition-smooth); box-shadow: var(--card-shadow); }
+        .faq-trigger { width: 100%; padding: 25px 30px; background: none; border: none; text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--text-dark); transition: color 0.3s; }
+        .faq-trigger:hover { color: var(--primary-pink); }
+        .faq-icon { font-size: 1.1rem; color: var(--primary-pink); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .faq-content { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1), padding 0.5s ease; padding: 0 30px; color: var(--text-muted); font-size: 1rem; line-height: 1.7; }
+        .faq-item.active .faq-icon { transform: rotate(180deg); }
+        .faq-item.active .faq-content { padding-bottom: 25px; max-height: 300px; }
+
+        /* --- Pricing Architecture --- */
+        .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 35px; }
+        .price-card { background: #FFF; padding: 55px 40px; border-radius: 35px; border: 1px solid var(--blur-border); text-align: center; transition: var(--transition-smooth); position: relative; overflow: hidden; }
+        .price-card.featured { background: var(--bg-soft); border: 2px solid var(--primary-pink); transform: scale(1.03); box-shadow: 0 20px 40px rgba(255,51,102,0.1); }
+        .price-card.featured:hover { box-shadow: var(--cyber-glow); }
+        .price-card h3 { font-family: 'Staatliches', sans-serif; font-size: 2.6rem; color: var(--text-dark); }
+        .price-tag { font-family: 'Staatliches', sans-serif; font-size: 4.5rem; color: var(--primary-pink); margin-bottom: 20px; }
+        .price-tag .strike-out { font-size: 2rem; color: var(--text-muted); text-decoration: line-through; margin-right: 10px; opacity: 0.6; }
+        .price-list { list-style: none; text-align: left; margin-bottom: 40px; }
+        .price-list li { margin-bottom: 14px; font-weight: 600; display: flex; align-items: center; gap: 12px; font-size: 0.95rem; color: var(--text-muted); }
+        .price-list li i { color: var(--primary-pink); }
+        .revision-indicator { background: rgba(255,51,102,0.06); color: var(--primary-pink); padding: 8px 15px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; margin-bottom: 25px; display: inline-block; }
+        .launch-badge { position: absolute; top: 25px; right: -45px; background: #1A1C23; color: #FFF; padding: 8px 45px; font-size: 10px; font-weight: 800; text-transform: uppercase; transform: rotate(45deg); }
+
+        /* --- SPA Dedicated Isolated Checkout View Structures --- */
+        #main-landing-view { display: block; }
+        #isolated-checkout-view { display: none; padding: 160px 0 100px 0; min-height: 80vh; }
+        .checkout-layout-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 50px; align-items: start; margin-top: 40px; }
+        .checkout-meta-card { background: #FFF; border: 1px solid var(--blur-border); border-radius: 24px; padding: 40px; box-shadow: var(--card-shadow); }
+        .checkout-header-badge { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--primary-pink); font-size: 12px; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px; }
+
+        /* --- Footer --- */
+        .prestige-footer { background: #1A1C23; color: #FAFAFC; padding: 90px 0 40px 0; border-top: 3px solid var(--primary-pink); position: relative; box-shadow: 0 -10px 30px rgba(255,51,102,0.1); }
+        .footer-grid { display: grid; grid-template-columns: 1.5fr repeat(3, 1fr); gap: 60px; margin-bottom: 60px; }
+        .footer-brand h3 { font-family: 'Staatliches', sans-serif; font-size: 2.5rem; margin-bottom: 15px; }
+        .footer-brand h3 span { color: var(--primary-pink); }
+        .footer-brand p { color: #8A92A6; font-size: 14px; }
+        .footer-column h4 { font-family: 'Staatliches', sans-serif; font-size: 1.3rem; margin-bottom: 25px; color: var(--primary-pink); }
+        .footer-links { list-style: none; }
+        .footer-links li { margin-bottom: 12px; }
+        .footer-links a { color: #CDD4E4; text-decoration: none; font-size: 14px; font-weight: 600; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--primary-pink); text-shadow: 0 0 10px rgba(255,51,102,0.4); }
+        .footer-bottom { padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; font-size: 13px; color: #8A92A6; }
+        .footer-socials { display: flex; gap: 15px; }
+        .footer-socials a { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; color: #FFF; text-decoration: none; transition: var(--transition-smooth); }
+        .footer-socials a:hover { background: var(--primary-pink); transform: translateY(-3px); box-shadow: var(--cyber-glow); }
+
+        /* --- Keyframe Architectures --- */
+        @keyframes liveGradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes textGlowPulse { 0% { text-shadow: 0 0 10px rgba(255,51,102,0.2); } 100% { text-shadow: 0 0 25px rgba(255,51,102,0.7), 0 0 45px rgba(255,51,102,0.3); } }
+        @keyframes rotateCircle { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes rotateCircleReverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+        @keyframes float { 0% { transform: translateY(0px) scale(1); } 100% { transform: translateY(-30px) scale(1.05); } }
+        @keyframes marqueeAnimation { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 20px 40px rgba(0,0,0,0.15); } 50% { box-shadow: var(--cyber-glow); transform: scale(1.03); } }
+
+        /* --- Responsive Queries --- */
+        @media (max-width: 1250px) {
+            .hero-layout, .lab-grid, .services-grid, .pricing-grid, .utility-grid, .showcase-row, .showcase-row.reverse, .card-carousel-grid, .footer-grid, .checkout-layout-grid { grid-template-columns: 1fr; text-align: center; gap: 40px; }
+            .hero-intro { max-width: 100%; margin: 0 auto; }
+            .hero-display { justify-content: center; }
+            .hero-display-showcase { width: 450px; height: 450px; }
+            .nav-menu { display: none; }
+        }
+        @media (max-width: 600px) {
+            .hero-display-showcase { width: 320px; height: 320px; }
+            .hero-intro h1 { font-size: 4.5rem; }
+            .section-header h2 { font-size: 3.5rem; }
+            .container { padding: 0 20px; }
+            .benefit-slider-card { flex: 0 0 290px; padding: 25px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="wow-loader">
+        <div class="loader-numbers">
+            <div id="loader-percentage">0</div><span>%</span>
+        </div>
+        <div class="loader-text-status">Loading Matrix Environments</div>
+    </div>
+
+    <div class="page-wipe-overlay" id="global-page-wipe"></div>
+    
+    <div class="sticky-action-shelf" id="global-sticky-action">
+        <div onclick="navigateToCheckout('General Architecture Sync')" class="sticky-pill">
+            <span class="btn-text-main">
+                <i class="fa-solid fa-bolt" style="color: var(--graph-blue);"></i>
+                Build Your Website Blueprint
+            </span>
+            <div class="btn-marquee-wrap">
+                <div class="btn-marquee-inner">
+                    <span><i class="fa-solid fa-bolt" style="color: var(--graph-blue);"></i> Build Your Website Blueprint</span>
+                    <span><i class="fa-solid fa-bolt" style="color: var(--graph-blue);"></i> Build Your Website Blueprint</span>
+                    <span><i class="fa-solid fa-bolt" style="color: var(--graph-blue);"></i> Build Your Website Blueprint</span>
+                    <span><i class="fa-solid fa-bolt" style="color: var(--graph-blue);"></i> Build Your Website Blueprint</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-canvas"></div>
+    <div class="bg-grid-overlay"></div>
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="geo-circle geo-circle-1"></div>
+    <div class="geo-circle geo-circle-2"></div>
+    <div id="custom-cursor"></div>
+
+    <header id="main-header">
+        <div class="nav-inner">
+            <a href="#" onclick="returnToLanding(event)" class="logo-package">
+                <img src="pic1.png" alt="AIM Altitude Logo Icon">
+                AIM <span>ALTITUDE</span>
+            </a>
+            <ul class="nav-menu" id="navigation-links-list">
+                <li><a href="#home" data-scroll-target="#home">Home</a></li>
+                <li><a href="#benefits" data-scroll-target="#benefits">Benefits</a></li>
+                <li><a href="#services" data-scroll-target="#services">Services</a></li>
+                <li><a href="#utilities" data-scroll-target="#utilities">Features</a></li>
+                <li><a href="#case-studies" data-scroll-target="#case-studies">Work</a></li>
+                <li><a href="#architecture" data-scroll-target="#architecture">Sandbox</a></li>
+                <li><a href="#technical-specs" data-scroll-target="#technical-specs">Specs</a></li>
+                <li><a href="#online-growth" data-scroll-target="#online-growth">Growth</a></li>
+                <li><a href="#faq" data-scroll-target="#faq">FAQ</a></li>
+                <li><a href="#pricing" data-scroll-target="#pricing">Pricing</a></li>
+            </ul>
+            <button onclick="navigateToCheckout('Header CTA Quick Launch')" class="btn-system btn-pink-filled" style="padding: 12px 28px;">
+                <span class="btn-text-main">Get Started</span>
+                <div class="btn-marquee-wrap">
+                    <div class="btn-marquee-inner">
+                        <span>Get Started</span><span>Get Started</span><span>Get Started</span><span>Get Started</span>
+                    </div>
+                </div>
+            </button>
+        </div>
+    </header>
+
+    <div id="main-landing-view">
+        <section id="home">
+            <div class="container">
+                <div class="hero-layout">
+                    <div class="hero-intro">
+                        <p style="color: var(--primary-pink); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px;">Premium Web Design & Engineering</p>
+                        <h1>WE BUILD WEBSITES FOR <span>SUCCESS</span>.</h1>
+                        <p>Beautiful, fast, custom websites designed to give your company instant digital credibility and scale smoothly as your brand grows.</p>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <button onclick="lenisScrollTo('#pricing')" class="btn-system btn-pink-filled">
+                                <span class="btn-text-main">See Our Packages</span>
+                                <div class="btn-marquee-wrap">
+                                    <div class="btn-marquee-inner">
+                                        <span>See Our Packages</span><span>See Our Packages</span><span>See Our Packages</span><span>See Our Packages</span>
+                                    </div>
+                                </div>
+                            </button>
+                            <button onclick="lenisScrollTo('#services')" class="btn-system btn-pink-outline">
+                                <span class="btn-text-main">Explore What We Do</span>
+                                <div class="btn-marquee-wrap">
+                                    <div class="btn-marquee-inner">
+                                        <span>Explore What We Do</span><span>Explore What We Do</span><span>Explore What We Do</span><span>Explore What We Do</span>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="hero-display">
+                        <div class="hero-display-showcase">
+                            <div id="canvas3d-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="marquee-container">
+            <div class="marquee-track">
+                <div class="marquee-content">
+                    <span><i class="fa-solid fa-star"></i> Custom UI/UX Interface Design</span>
+                    <span><i class="fa-solid fa-fire"></i> 100% Fully Responsive Layouts</span>
+                    <span><i class="fa-solid fa-bolt"></i> Blazing Fast Load Speeds</span>
+                    <span><i class="fa-solid fa-chart-line"></i> Strategic Performance Engineering</span>
+                </div>
+                <div class="marquee-content">
+                    <span><i class="fa-solid fa-star"></i> Custom UI/UX Interface Design</span>
+                    <span><i class="fa-solid fa-fire"></i> 100% Fully Responsive Layouts</span>
+                    <span><i class="fa-solid fa-bolt"></i> Blazing Fast Load Speeds</span>
+                    <span><i class="fa-solid fa-chart-line"></i> Strategic Performance Engineering</span>
+                </div>
+            </div>
+        </div>
+
+        <section id="benefits">
+            <div class="container">
+                <div class="section-header">
+                    <p>Strategic Advantages</p>
+                    <h2>Benefits of a Professional Front Page</h2>
+                </div>
+                
+                <div class="showcase-slider-wrapper">
+                    <div class="slider-controls-mini">
+                        <button class="slider-nav-btn" onclick="slideShowcase('left')"><i class="fa-solid fa-arrow-left"></i></button>
+                        <button class="slider-nav-btn" onclick="slideShowcase('right')"><i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                    
+                    <div class="slider-track-container" id="benefits-track">
+                        <div class="benefit-slider-card">
+                            <div>
+                                <div class="benefit-card-tag">Credibility & Authority</div>
+                                <h3>Instant Consumer Digital Trust</h3>
+                                <p>A high-end, premium homepage shows customers you are a legitimate, top-tier business. Clean visuals eliminate doubt immediately.</p>
+                            </div>
+                            <div class="benefit-metrics-row">
+                                <div class="benefit-stat-box"><span class="benefit-stat-num">94%</span><span class="benefit-stat-lbl">First Impression Trust</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="benefit-slider-card variant-dark">
+                            <div>
+                                <div class="benefit-card-tag">Conversion Optimization</div>
+                                <h3>Turn Traffic Into Revenue</h3>
+                                <p>Strategic layout architectures place contact prompts, action buttons, and sales journeys exactly where users expect to see them.</p>
+                            </div>
+                            <div class="benefit-metrics-row">
+                                <div class="benefit-stat-box"><span class="benefit-stat-num">+300%</span><span class="benefit-stat-lbl">Conversion Multiplier</span></div>
+                            </div>
+                        </div>
+                        
+                        <div class="benefit-slider-card variant-lime">
+                            <div>
+                                <div class="benefit-card-tag">Performance Matrix</div>
+                                <h3>Blazing Fast Page Speeds</h3>
+                                <p>Optimized front pages lose fewer visitors to high bounce rates. Every millisecond shaved retains target audience focus.</p>
+                            </div>
+                            <div class="benefit-metrics-row">
+                                <div class="benefit-stat-box"><span class="benefit-stat-num">&lt; 1.5s</span><span class="benefit-stat-lbl">Load Threshold</span></div>
+                            </div>
+                        </div>
+
+                        <div class="benefit-slider-card">
+                            <div>
+                                <div class="benefit-card-tag">Responsiveness</div>
+                                <h3>Flawless Mobile Domination</h3>
+                                <p>Your web experience automatically reshapes and formats text, media containers, and buttons beautifully for any user viewport matrix.</p>
+                            </div>
+                            <div class="benefit-metrics-row">
+                                <div class="benefit-stat-box"><span class="benefit-stat-num">100%</span><span class="benefit-stat-lbl">Screen Agnostic</span></div>
+                            </div>
+                        </div>
+
+                        <div class="benefit-slider-card variant-dark">
+                            <div>
+                                <div class="benefit-card-tag">Discoverability</div>
+                                <h3>Search Engine Dominance</h3>
+                                <p>Clean structural HTML, metadata hooks, and speed standards guarantee search platforms index and position your business page high.</p>
+                            </div>
+                            <div class="benefit-metrics-row">
+                                <div class="benefit-stat-box"><span class="benefit-stat-num">#1</span><span class="benefit-stat-lbl">Organic Intent Rank</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="services" class="dark-section-variant">
+            <div class="container">
+                <div class="section-header">
+                    <p>Expert Design Capabilities</p>
+                    <h2>WHAT WE DO</h2>
+                </div>
+                <div class="services-grid">
+                    <div class="service-card" onclick="triggerMiniInteraction('uiux')">
+                        <i class="fa-solid fa-compass-drafting"></i>
+                        <h3>Custom UI/UX Design</h3>
+                        <p>Gorgeous user interfaces designed to look highly professional, engaging, and unique to your brand.</p>
+                    </div>
+                    <div class="service-card" onclick="triggerMiniInteraction('native')">
+                        <i class="fa-solid fa-code"></i>
+                        <h3>Modern Web Development</h3>
+                        <p>Clean, ultra-fast frontend code built using stable, optimized, and secure modern coding frameworks.</p>
+                    </div>
+                    <div class="service-card" onclick="triggerMiniInteraction('optim')">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <h3>Performance Optimization</h3>
+                        <p>Advanced image and layout staging that makes your site load instantly so users never bounce away.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="utilities">
+            <div class="container">
+                <div class="section-header">
+                    <p>Functional Modules</p>
+                    <h2>CORE APPLICATION UTILITIES</h2>
+                </div>
+                <div class="utility-grid">
+                    <div class="utility-card">
+                        <div class="utility-icon-box"><i class="fa-solid fa-cash-register"></i></div>
+                        <div class="utility-content">
+                            <h3>E-Commerce Core & Checkout Engine</h3>
+                            <p>Fluid checkout processes, smart currency conversion setups, secure payment gateway integrations, and instant sales tracking dashboards.</p>
+                            <div class="utility-media-wrap">
+                                <img src="pic2.png" alt="Ecommerce Payment Terminal">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="utility-card">
+                        <div class="utility-icon-box"><i class="fa-solid fa-database"></i></div>
+                        <div class="utility-content">
+                            <h3>Content Management Infrastructure</h3>
+                            <p>Simple administration backends configured so your internal teams can rewrite headlines, alter imagery, and launch brand new subpages instantly.</p>
+                            <div class="utility-media-wrap">
+                                <img src="pic3.png" alt="Database Monitor Infrastructure">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="case-studies">
+            <div class="container">
+                <div class="section-header">
+                    <p>Selected Production Records</p>
+                    <h2>Showcase Website</h2>
+                </div>
+                <div class="showcase-row">
+                    <img src="pic4.png" class="showcase-img" alt="Aura-Watches">
+                    <div class="showcase-text">
+                        <h3>Aura-Watches</h3>
+                        <p></p>
+<button onclick="window.open('https://htmlpreview.github.io/?https://github.com/GamingCuber-12/aura-watches/blob/main/index.html', '_blank')" class="btn-system btn-pink-outline">                            <span class="btn-text-main">Review Scope Details</span>
+                            <div class="btn-marquee-wrap">
+                                <div class="btn-marquee-inner">
+                                    <span>Review Scope Details</span><span>Review Scope Details</span><span>Review Scope Details</span><span>Review Scope Details</span>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+                <div class="showcase-row reverse">
+                    <div class="showcase-text">
+                        <h3>hik-store</h3>
+                        <p></p>
+<button onclick="window.open('https://gamingcuber-12.github.io/HIK-Store/Client.html#products', '_blank')" class="btn-system btn-pink-outline">                            <span class="btn-text-main">Review Scope Details</span>
+                            <div class="btn-marquee-wrap">
+                                <div class="btn-marquee-inner">
+                                    <span>Review Scope Details</span><span>Review Scope Details</span><span>Review Scope Details</span><span>Review Scope Details</span>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                    <img src="pic5.png" class="showcase-img" alt="Apex Fintech Financial Statistics">
+                </div>
+            </div>
+        </section>
+
+        <section id="architecture" class="dark-section-variant">
+            <div class="container">
+                <div class="section-header">
+                    <p>Component Prototyping Laboratory</p>
+                    <h2>INTERACTIVE DESIGN SANDBOX</h2>
+                </div>
+                <div class="lab-grid">
+                    <div class="lab-controls">
+                        <div class="lab-btn active-control" onclick="adjustSandboxMode('wireframe', this)">
+                            <i class="fa-solid fa-border-top-left"></i>
+                            <div>
+                                <h4>Isolate Structural Blueprints</h4>
+                                <p style="font-size:12px; opacity:0.7;">Strip cosmetic color layers to audit core wireframe layout grids.</p>
+                            </div>
+                        </div>
+                        <div class="lab-btn" onclick="adjustSandboxMode('bounds', this)">
+                            <i class="fa-solid fa-maximize"></i>
+                            <div>
+                                <h4>Expand Padding Bounds</h4>
+                                <p style="font-size:12px; opacity:0.7;">Enforce dramatic structural spacing limits for maximum content focus.</p>
+                            </div>
+                        </div>
+                        <div class="lab-btn" onclick="adjustSandboxMode('dark', this)">
+                            <i class="fa-solid fa-moon"></i>
+                            <div>
+                                <h4>Simulate Midnight Theme</h4>
+                                <p style="font-size:12px; opacity:0.7;">Invert style colors to instantly test native dark system performance.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="sandbox-stage" class="sandbox-stage-glass wireframe-mode">
+                        <div class="sandbox-card">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                                <strong style="text-transform:uppercase; font-size:12px; letter-spacing:1px; font-weight: 700;">Module System Component Alpha</strong>
+                                <span style="width:10px; height:10px; border-radius:50%; background:var(--primary-pink);"></span>
+                            </div>
+                            <p style="font-size:14px; margin-bottom:15px; font-weight: 500;">This mock container element allows you to simulate custom visual rules without rewriting code architectures.</p>
+                            <div style="height:4px; background:var(--primary-pink); border-radius:2px; width:65%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="technical-specs">
+            <div class="container">
+                <div class="section-header">
+                    <p>Standardized Stack Blueprint</p>
+                    <h2>What's Built Into Every Project</h2>
+                </div>
+                <div style="max-width:1100px; margin:0 auto; width:100%;">
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>Core Service Feature</th>
+                                <th>Target Standard</th>
+                                <th>Implementation Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Mobile Optimization</strong></td>
+                                <td>100% Fully Responsive</td>
+                                <td>Guaranteed seamless performance on all smartphone, tablet, and desktop viewports.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Blazing Fast Speed</strong></td>
+                                <td>Under 1.5 Seconds Load</td>
+                                <td>Optimized script architecture, code minification, and compressed image assets.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>SEO & Search Ranking</strong></td>
+                                <td>Google-Friendly Blueprint</td>
+                                <td>Semantic structural markup and layout mapping built to maximize organic search visibility.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="online-growth" class="dark-section-variant">
+            <div class="container">
+                <div class="section-header">
+                    <p>Our Features</p>
+                    <h2>How We Help You Grow</h2>
+                </div>
+                <div class="card-carousel-grid">
+                    <div class="glass-feature-card">
+                        <img src="pic6.png" class="card-display-img" alt="Seo Data Analysis Chart">
+                        <h3>Search Engine Optimization (SEO)</h3>
+                        <p>We build our websites using clear code structures so search engines like Google can easily find and rank your website, helping you bring in more consistent traffic.</p>
+                    </div>
+                    <div class="glass-feature-card">
+                        <img src="pic2.png" class="card-display-img" alt="Conversion Layout Engine">
+                        <h3>Designed to Get Customers</h3>
+                        <p>We organize your layout and contact buttons in a way that makes sense to visitors, ensuring it is easy for them to fill out forms, call you, or book an appointment.</p>
+                    </div>
+                    <div class="glass-feature-card">
+                        <img src="pic1.png" class="card-display-img" alt="Mobile View Mockup Presentation">
+                        <h3>Works on All Screens</h3>
+                        <p>Your website automatically reshapes its images, text, and structure so it functions beautifully whether a customer is looking at it on a large desktop monitor, a tablet, or a smartphone.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="faq">
+            <div class="container">
+                <div class="section-header">
+                    <p>Clear Answers</p>
+                    <h2>FREQUENTLY ASKED QUESTIONS</h2>
+                </div>
+                <div class="faq-shelf">
+                    <div class="faq-item">
+                        <button class="faq-trigger" onclick="toggleFaq(this)">
+                            <span>What is included in the website blueprint layouts?</span>
+                            <i class="fa-solid fa-chevron-down faq-icon"></i>
+                        </button>
+                        <div class="faq-content">
+                            <p>Every assignment details beautiful, custom frontend development code frames, optimized standard search engines mappings, compression utilities for media files, and cross-platform responsive interface testing updates.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-trigger" onclick="toggleFaq(this)">
+                            <span>Are there hidden platform support or background costs?</span>
+                            <i class="fa-solid fa-chevron-down faq-icon"></i>
+                        </button>
+                        <div class="faq-content">
+                            <p>No, all tier quotes feature full pricing clarity. Custom infrastructure expansions, dynamic live database hooks, or third-party continuous data integrations are quoted perfectly upfront before engineering begins.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-trigger" onclick="toggleFaq(this)">
+                            <span>How long does a complete custom build phase take?</span>
+                            <i class="fa-solid fa-chevron-down faq-icon"></i>
+                        </button>
+                        <div class="faq-content">
+                            <p>Standard structures require between 7 and 14 deployment cycles. Complex, high-tier layouts built with deep e-commerce engine configurations may alter structural pipeline delivery estimates slightly.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="pricing">
+            <div class="container">
+                <div class="section-header">
+                    <p>Investment Tiers</p>
+                    <h2>PRODUCTION SETUP PACKAGES</h2>
+                </div>
+                <div class="pricing-grid">
+                    <div class="price-card">
+                        <h3>Starter Package</h3>
+                        <div class="price-tag"><span class="strike-out">AED500</span>FREE</div>
+                        <div class="revision-indicator"><i class="fa-solid fa-layer-group"></i> Up to 5 Sections</div>
+                        <ul class="price-list">
+                            <li><i class="fa-solid fa-check"></i> Bespoke UI Mockup Design</li>
+                            <li><i class="fa-solid fa-check"></i> 100% Secure Code Compilation</li>
+                            <li><i class="fa-solid fa-check"></i> Initial Standard SEO Tag Staging</li>
+                        </ul>
+                        <button onclick="navigateToCheckout('Starter Launch Blueprint')" class="btn-system btn-pink-outline" style="width:100%;">
+                            <span class="btn-text-main">Select Package Config</span>
+                            <div class="btn-marquee-wrap">
+                                <div class="btn-marquee-inner">
+                                    <span>Select Package Config</span><span>Select Package Config</span><span>Select Package Config</span><span>Select Package Config</span>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="price-card featured">
+                        <div class="launch-badge">Popular</div>
+                        <h3>Standard Package</h3>
+                        <div class="price-tag"><span class="strike-out">AED1000</span>FREE</div>
+                        <div class="revision-indicator"><i class="fa-solid fa-layer-group"></i> Up to 12 Sections</div>
+                        <ul class="price-list">
+                            <li><i class="fa-solid fa-check"></i> Immersive UI/UX Layouts</li>
+                            <li><i class="fa-solid fa-check"></i> Content Management Engine Setup</li>
+                            <li><i class="fa-solid fa-check"></i> Premium Search Optimization</li>
+                        </ul>
+                        <button onclick="navigateToCheckout('Growth Engine Elite')" class="btn-system btn-pink-filled" style="width:100%;">
+                            <span class="btn-text-main">Select Package Config</span>
+                            <div class="btn-marquee-wrap">
+                                <div class="btn-marquee-inner">
+                                    <span>Select Package Config</span><span>Select Package Config</span><span>Select Package Config</span><span>Select Package Config</span>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="price-card">
+                        <h3>Premium Package</h3>
+                        <div class="price-tag"><span class="strike-out">AED1500</span>FREE</div>
+                        <div class="revision-indicator"><i class="fa-solid fa-layer-group"></i> Tailored Bounds</div>
+                        <ul class="price-list">
+                            <li><i class="fa-solid fa-check"></i> Full Strategic Blueprint Mapping</li>
+                            <li><i class="fa-solid fa-check"></i> E-Commerce Core Integrations</li>
+                            <li><i class="fa-solid fa-check"></i> Dedicated Engineering Pipeline</li>
+                        </ul>
+                        <button onclick="navigateToCheckout('Apex Enterprise Custom')" class="btn-system btn-pink-outline" style="width:100%;">
+                            <span class="btn-text-main">Select Package Config</span>
+                            <div class="btn-marquee-wrap">
+                                <div class="btn-marquee-inner">
+                                    <span>Select Package Config</span><span>Select Package Config</span><span>Select Package Config</span><span>Select Package Config</span>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="isolated-checkout-view">
+        <div class="container">
+            <button onclick="returnToLanding(event)" class="btn-system btn-pink-outline" style="margin-bottom: 30px;"><i class="fa-solid fa-arrow-left"></i> Back to Main Site</button>
+            <div class="section-header" style="text-align: left; margin-bottom: 30px;">
+                <p>Secure Interface Configuration</p>
+                <h2>Complete Your Request</h2>
+            </div>
+
+            <div class="checkout-layout-grid">
+                <div class="checkout-meta-card">
+                    <div class="checkout-header-badge">
+                        <i class="fa-solid fa-box-open"></i> Selected Pipeline Plan
+                    </div>
+                    <h3 id="checkout-chosen-tier-title" style="font-family: 'Staatliches', sans-serif; font-size: 2.8rem; line-height: 1; margin-bottom: 10px;">Standard Setup Blueprint</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 30px;">Your framework blueprint compilation profile configuration has been targeted. Fill out the validation fields to prompt deployment pipeline engineering sync metrics.</p>
+                    
+                    <a name="formAnchor649794553" id="formAnchor649794553"></a>
+                    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdqI4ow_gQGT7s1wBKkaMNeZu5F4IjyGk_NclVSPyKfEgoBjQ/viewform?embedded=true" width="100%" height="600" frameborder="0" marginheight="0" marginwidth="0" style="border-radius: 12px; border: 1px solid var(--blur-border);">Loading…</iframe>
+                </div>
+
+                <div class="checkout-meta-card" style="background: var(--text-dark); color: #FFF; border: none;">
+                    <h3 style="font-family: 'Staatliches', sans-serif; font-size: 2rem; color: var(--primary-pink); margin-bottom: 20px;">Project Guarantees</h3>
+                    <ul class="price-list" style="margin-bottom: 0;">
+                        <li style="color: #CDD4E4; margin-bottom: 20px;"><i class="fa-solid fa-shield-halved" style="color: var(--graph-blue);"></i> <div><strong>No Hidden Renewals:</strong> Your configured framework standard stays active completely clean of recurring platform overhead constraints.</div></li>
+                        <li style="color: #CDD4E4; margin-bottom: 20px;"><i class="fa-solid fa-circle-check" style="color: var(--tabby-green);"></i> <div><strong>Code Integrity:</strong> 100% hand-crafted clean, native frontend structures optimization standard matching Google Core Web Vitals guidelines perfectly.</div></li>
+                        <li style="color: #CDD4E4;"><i class="fa-solid fa-truck-fast" style="color: var(--primary-pink);"></i> <div><strong>Fast Iterations:</strong> Setup files and architecture initialization pipelines deploy live to client review hubs within 7-14 standard structural cycles.</div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+           
+    <footer class="prestige-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3>AIM <span>ALTITUDE</span></h3>
+                    <p>High-end digital engineering and interactive visual interfaces configured to secure absolute competitive market authority.</p>
+                </div>
+                <div class="footer-column">
+                    <h4>Digital Routes</h4>
+                    <ul class="footer-links">
+                        <li><a href="#services" data-scroll-target="#services">Design Capabilities</a></li>
+                        <li><a href="#utilities" data-scroll-target="#utilities">Functional Utilities</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>System Details</h4>
+                    <ul class="footer-links">
+                        <li><a href="#technical-specs" data-scroll-target="#technical-specs">Technical Stack Standards</a></li>
+                        <li><a href="#architecture" data-scroll-target="#architecture">Sandbox Laboratory Module</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Corporate Guard</h4>
+                    <ul class="footer-links">
+                        <li><a href="#" onclick="returnToLanding(event)">Privacy Data Protection Safeguard</a></li>
+                        <li><a href="#" onclick="returnToLanding(event)">Terms of Interactive System Use</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div>&copy; 2026 AIM Altitude Interactive Engineering Layouts Ltd. All legal rights preserved globally.</div>
+                <div class="footer-socials">
+                    <a href="#" onclick="returnToLanding(event)"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#" onclick="returnToLanding(event)"><i class="fa-brands fa-linkedin-in"></i></a>
+                    <a href="#" onclick="returnToLanding(event)"><i class="fa-brands fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        /* --- WOW UPGRADE: INITIAL LOADER ENGINE --- */
+        document.addEventListener("DOMContentLoaded", () => {
+            let progress = 0;
+            const loaderText = document.getElementById('loader-percentage');
+            const loaderContainer = document.getElementById('wow-loader');
+            
+            // Artificial delay generator simulating asset load
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 15) + 5;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        loaderContainer.classList.add('hide');
+                        // Trigger initial reveal on landing hero 
+                        document.querySelector('#home').classList.add('reveal-active');
+                    }, 400); // Hold at 100% momentarily before lifting
+                }
+                loaderText.innerText = progress;
+            }, 60);
+        });
+
+        /* --- LENIS INERTIAL SMOOTH SCROLL ENGINE INITIALIZATION --- */
+        const lenis = new Lenis({
+            duration: 1.4,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), 
+            direction: 'vertical',
+            gestureDirection: 'vertical',
+            smooth: true,
+            mouseMultiplier: 1,
+            linearInterpolation: false
+        });
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        function lenisScrollTo(targetSelector) {
+            lenis.scrollTo(targetSelector, { offset: -80, immediate: false, duration: 1.5 });
+        }
+
+        document.querySelectorAll('.nav-menu a, footer a[data-scroll-target]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                const targetId = link.getAttribute('data-scroll-target');
+                if(targetId) { e.preventDefault(); lenisScrollTo(targetId); }
+            });
+        });
+
+        /* --- THREE.JS LIVE 3D INTERACTIVE HERO ANIMATION FRAME --- */
+        const container3d = document.getElementById('canvas3d-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, container3d.clientWidth / container3d.clientHeight, 0.1, 1000);
+        camera.position.z = 5.5;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container3d.clientWidth, container3d.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container3d.appendChild(renderer.domElement);
+
+        const geometry = new THREE.TorusKnotGeometry(1.2, 0.38, 150, 20, 3, 4);
+        const material = new THREE.MeshPhysicalMaterial({
+            color: 0xFF3366, roughness: 0.1, metalness: 0.8, clearcoat: 1.0,
+            clearcoatRoughness: 0.1, wireframe: true, emissive: 0x3a0010, emissiveIntensity: 0.6
+        });
+        const torusKnot = new THREE.Mesh(geometry, material);
+        scene.add(torusKnot);
+
+        const pointLight1 = new THREE.PointLight(0x00E5FF, 2, 50); pointLight1.position.set(5, 5, 5); scene.add(pointLight1);
+        const pointLight2 = new THREE.PointLight(0xFF3366, 2, 50); pointLight2.position.set(-5, -5, 5); scene.add(pointLight2);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); scene.add(ambientLight);
+
+        let mouseX = 0, mouseY = 0, target3dX = 0, target3dY = 0;
+        window.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - window.innerWidth / 2) * 0.0015;
+            mouseY = (event.clientY - window.innerHeight / 2) * 0.0015;
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container3d.clientWidth / container3d.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container3d.clientWidth, container3d.clientHeight);
+        });
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            torusKnot.rotation.x += 0.004; torusKnot.rotation.y += 0.006;
+            target3dX += (mouseX - target3dX) * 0.05; target3dY += (mouseY - target3dY) * 0.05;
+            torusKnot.rotation.z += target3dX * 0.05; torusKnot.position.x = target3dX * 0.6; torusKnot.position.y = -target3dY * 0.6;
+            renderer.render(scene, camera);
+        }
+        animate3D();
+
+        /* --- CINEMATIC PAGE SWITCH TRANSITION ENGINE (SPA) --- */
+        function navigateToCheckout(tierPackageNameText) {
+            const wipe = document.getElementById('global-page-wipe');
+            const landing = document.getElementById('main-landing-view');
+            const checkout = document.getElementById('isolated-checkout-view');
+            
+            wipe.className = "page-wipe-overlay active";
+            landing.style.transform = "scale(0.96)"; landing.style.opacity = "0";
+
+            setTimeout(() => {
+                landing.style.display = 'none'; checkout.style.display = 'block';
+                checkout.style.transform = "scale(1.04)"; checkout.style.opacity = "0";
+                
+                document.getElementById('checkout-chosen-tier-title').innerText = tierPackageNameText;
+                if(document.getElementById('navigation-links-list')) document.getElementById('navigation-links-list').style.visibility = 'hidden';
+                if(document.getElementById('global-sticky-action')) document.getElementById('global-sticky-action').style.display = 'none';
+                
+                lenis.scrollTo(0, { immediate: true });
+
+                setTimeout(() => {
+                    checkout.style.transform = "scale(1)"; checkout.style.opacity = "1";
+                    wipe.className = "page-wipe-overlay exit";
+                }, 50);
+            }, 600); 
+        }
+
+        function returnToLanding(event) {
+            if(event) event.preventDefault();
+            const wipe = document.getElementById('global-page-wipe');
+            const landing = document.getElementById('main-landing-view');
+            const checkout = document.getElementById('isolated-checkout-view');
+
+            wipe.className = "page-wipe-overlay active";
+            checkout.style.transform = "scale(0.96)"; checkout.style.opacity = "0";
+
+            setTimeout(() => {
+                checkout.style.display = 'none'; landing.style.display = 'block';
+                landing.style.transform = "scale(1.04)"; landing.style.opacity = "0";
+                
+                if(document.getElementById('navigation-links-list')) document.getElementById('navigation-links-list').style.visibility = 'visible';
+                if(document.getElementById('global-sticky-action')) document.getElementById('global-sticky-action').style.display = 'flex';
+                
+                lenis.scrollTo(0, { immediate: true });
+
+                setTimeout(() => {
+                    landing.style.transform = "scale(1)"; landing.style.opacity = "1";
+                    wipe.className = "page-wipe-overlay exit";
+                }, 50);
+            }, 600);
+        }
+
+        /* --- WOW UPGRADE: ENHANCED INTERSECTION OBSERVER WITH STAGGER --- */
+        const masterSections = document.querySelectorAll('section');
+        const scrollRevealObserverOptions = { threshold: 0.15, rootMargin: "0px 0px -60px 0px" };
+        
+        const scrollRevealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) { entry.target.classList.add('reveal-active'); }
+            });
+        }, scrollRevealObserverOptions);
+
+        masterSections.forEach(section => scrollRevealObserver.observe(section));
+
+        window.addEventListener('scroll', () => {
+            if (document.getElementById('main-landing-view').style.display === 'none') return;
+            let currentActiveId = "";
+            masterSections.forEach(sec => {
+                const sectionTop = sec.offsetTop;
+                if (window.pageYOffset >= sectionTop - 250) { currentActiveId = sec.getAttribute('id'); }
+            });
+            document.querySelectorAll('.nav-menu a').forEach(link => {
+                link.classList.remove('active-bookmark');
+                if (link.getAttribute('href') === `#${currentActiveId}`) { link.classList.add('active-bookmark'); }
+            });
+        });
+
+        /* --- FLUID POINTER MICRO-INERTIA ENGINE --- */
+        const customCursor = document.getElementById('custom-cursor');
+        let cursorX = 0, cursorY = 0, mouseTargetX = 0, mouseTargetY = 0;
+        const lerpFactor = 0.16;
+
+        window.addEventListener('mousemove', (e) => { mouseTargetX = e.clientX; mouseTargetY = e.clientY; });
+
+        function animateCursorLoop() {
+            cursorX += (mouseTargetX - cursorX) * lerpFactor;
+            cursorY += (mouseTargetY - cursorY) * lerpFactor;
+            customCursor.style.left = `${cursorX}px`; customCursor.style.top = `${cursorY}px`;
+            requestAnimationFrame(animateCursorLoop);
+        }
+        requestAnimationFrame(animateCursorLoop);
+
+        document.querySelectorAll('a, button, .service-card, .lab-btn, .benefit-slider-card, .sticky-pill, .faq-trigger').forEach(elem => {
+            elem.addEventListener('mouseenter', () => {
+                customCursor.style.width = '45px'; customCursor.style.height = '45px';
+                customCursor.style.backgroundColor = 'rgba(255, 51, 102, 0.15)';
+                customCursor.style.boxShadow = '0 0 20px rgba(255, 51, 102, 0.5)';
+            });
+            elem.addEventListener('mouseleave', () => {
+                customCursor.style.width = '18px'; customCursor.style.height = '18px';
+                customCursor.style.backgroundColor = 'transparent';
+                customCursor.style.boxShadow = 'none';
+            });
+        });
+
+        /* --- PRE-EXISTING APP UTILITY CONTROLLERS --- */
+        function slideShowcase(direction) {
+            const track = document.getElementById('benefits-track');
+            const cardScrollOffset = 430; 
+            direction === 'left' ? track.scrollLeft -= cardScrollOffset : track.scrollLeft += cardScrollOffset;
+        }
+
+        function toggleFaq(buttonElement) {
+            const currentItem = buttonElement.parentElement;
+            const isOpen = currentItem.classList.contains('active');
+            document.querySelectorAll('.faq-item').forEach(item => { item.classList.remove('active'); });
+            if(!isOpen) { currentItem.classList.add('active'); }
+        }
+
+        function triggerMiniInteraction(techAreaKey) {
+            const systemResponsesMatrix = {
+                uiux: "Bespoke UI/UX Pipeline Grid Response Activated!",
+                native: "Modern Web Development Code Compiler Active!",
+                optim: "Staging Pipeline Optimizer Triggered! Core Web Vitals audited successfully."
+            };
+            alert(systemResponsesMatrix[techAreaKey] || "Custom sub-element matrix ping verified.");
+        }
+
+        function adjustSandboxMode(selectedModeStyleKey, clickedButtonSource) {
+            const stageElement = document.getElementById('sandbox-stage');
+            stageElement.className = "sandbox-stage-glass"; 
+            stageElement.classList.add(`${selectedModeStyleKey}-mode`);
+            document.querySelectorAll('.lab-btn').forEach(btn => btn.classList.remove('active-control'));
+            clickedButtonSource.classList.add('active-control');
+        }
+    </script>
+</body>
+</html>
